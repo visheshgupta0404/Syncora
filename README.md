@@ -32,7 +32,7 @@ npm run preview
 
 ## Connect and deploy
 
-Follow [the deployment guide](docs/DEPLOYMENT.md). You need free Supabase and Cloudflare accounts; neither has been created or configured for this checkout. There is no live deployment yet.
+Follow [the deployment guide](docs/DEPLOYMENT.md). The owner's free Supabase project is configured in Mumbai, the schema and anonymous Auth are enabled, and hosted room/realtime acceptance checks have passed. Local connection settings are in ignored `.env.local`; no keys are committed. Public hosting still needs Cloudflare configuration.
 
 Copy `.env.example` to `.env.local`, fill in the Supabase URL and **public publishable/anon key**, then restart Vite. Run `supabase/schema.sql` in the Supabase SQL editor and enable anonymous authentication. The schema can be rerun and upgrades milestone 1. It removes the old whole-state writer in favor of validated commands.
 
@@ -40,7 +40,7 @@ Never put a service-role key, secret key, database password or Turnstile secret 
 
 ## Room behavior and privacy
 
-Invitation codes use random UUIDs without separators. Only two authenticated identities may claim a room. Both have equal control; display names are labels, not verified identities. Invitations are kept in URL fragments so the code is not included in ordinary HTTP requests or referrers.
+Invitation codes use random UUIDs without separators. Only two authenticated identities may claim a room. Both have equal control; display names are labels, not verified identities. Invitation links use URL fragments, and the fragment is removed before mounting the YouTube player so its widget does not receive the invitation in the page URL.
 
 **Back to lobby** keeps your seat and offers Resume room. **Release my seat** removes membership; the last release deletes the room and history. New members can see retained queue and chat. Browser-data deletion loses the anonymous identity; create a new room if the old seat cannot be released. Rooms expire after seven days. Expired rooms are inaccessible and are removed on a subsequent room-open request, or by the admin-only cleanup function.
 

@@ -47,10 +47,11 @@ export function useRoom(notify) {
       actor.current = await signIn(captchaToken);
       const r = await rpc("open_room", { invite: invite || null });
       if (generation !== epoch.current) return;
+      // YouTube's widget reads location.href; remove invite fragments before mounting it.
+      history.replaceState(null, "", location.pathname);
       ref.current = null;
       accept(r, generation);
       save("room", { id: r.id, code: r.code });
-      history.replaceState(null, "", `#room=${r.code}`);
       setStatus("Connecting…");
     } catch (e) {
       notice.current(e.message);
@@ -98,6 +99,7 @@ export function useRoom(notify) {
         actor.current = session.user;
         const r = await readRoom(saved.id);
         if (active) {
+          history.replaceState(null, "", location.pathname);
           accept(r, generation);
           setStatus("Reconnecting…");
         }
@@ -159,6 +161,7 @@ export function useRoom(notify) {
       .channel(`room:${id}`, {
         config: {
           private: true,
+          postgres_changes_options: { wait: true, timeout: 15000 },
           presence: { key: actor.current?.id || crypto.randomUUID() },
         },
       })

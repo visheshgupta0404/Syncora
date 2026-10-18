@@ -20,9 +20,21 @@
 
 Verified in the desktop in-app browser: lobby, demo room, official YouTube embed loading and playback, pause, ±10-second seek, queue additions and play-next ordering, chat, and a 390-pixel mobile viewport. Local demo persistence and final layout checks are recorded in the completion message. This browser viewport is not a physical iPhone or an iOS autoplay test.
 
-## Hosted acceptance still required
+## Hosted acceptance
 
-The owner has no Supabase or Cloudflare accounts configured yet. Until provisioning and deployment, these boundaries cannot be verified:
+The owner's Supabase project is provisioned in Mumbai. The real schema was applied successfully through the SQL editor and anonymous sign-in is enabled. `npm run test:live` passed against the hosted Auth, PostgREST, database and private Realtime services:
+
+- Three independent guest identities; two-member admission and third-user rejection.
+- Outsider SELECT isolation through RLS.
+- Private presence authorization and actual Postgres-change delivery.
+- Idempotent command retry, play/pause/seek and concurrent chat persistence.
+- Seat release and replacement membership. The test room is released afterward; test guest Auth identities remain for administrator review.
+
+The live check is opt-in and creates three guest identities on each run. It refuses to run when a Turnstile site key is configured. A private channel must register its presence listener before subscribing; the app also waits for Postgres-change readiness before reporting Live room.
+
+The real browser app created a hosted room, displayed **Live room**, and restored that same membership after a full reload. The room invitation fragment is removed before the YouTube iframe mounts, and the resulting iframe page-URL parameters were checked to contain no invitation code.
+
+Physical-device and deployment checks still required:
 
 | Check                                        | Expected result                                                       |
 | -------------------------------------------- | --------------------------------------------------------------------- |
@@ -41,4 +53,4 @@ The owner has no Supabase or Cloudflare accounts configured yet. Until provision
 | New deployment                               | Update prompt appears and reload installs the new shell               |
 | Full-screen/PiP                              | Native behavior/fallback is accurate; unavailable PiP is not promised |
 
-Keep videos foregrounded on both phones. Ads, buffering and iOS restrictions can create temporary drift; use Resync. Physical-device playback, hosted Auth/PostgREST and WebSocket delivery have not been validated locally.
+Keep videos foregrounded on both phones. Ads, buffering and iOS restrictions can create temporary drift; use Resync. Hosted Auth/PostgREST and WebSocket delivery have been verified; physical-device playback, CAPTCHA, installation and a public deployment still need acceptance.

@@ -1,6 +1,6 @@
 # Free deployment
 
-The source and configuration are ready. Supabase and Cloudflare accounts/project provisioning are still required; the local demo does not connect two phones.
+The owner's free Supabase project is configured in Mumbai with the application schema and anonymous sign-in enabled. Its connection settings are saved only in ignored `.env.local`. Hosted API/realtime checks have passed. Cloudflare hosting and optional CAPTCHA configuration are still pending. The steps below also document how to reproduce the setup.
 
 ## 1. Supabase
 
