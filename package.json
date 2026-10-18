@@ -1,1 +1,24 @@
-{"name":"syncora","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1","build":"vite build","test":"node --test"},"dependencies":{"@supabase/supabase-js":"^2.0.0","react":"^19.0.0","react-dom":"^19.0.0"},"devDependencies":{"@vitejs/plugin-react":"^6.1.2","vite":"^8.3.4","vite-plugin-pwa":"^2.0.0"}}
+{
+  "name": "syncora",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "preview": "vite preview --host 127.0.0.1",
+    "build": "vite build",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "@vitejs/plugin-react": "^6.1.2",
+    "prettier": "^3.9.10",
+    "vite": "^8.3.4",
+    "vite-plugin-pwa": "^2.0.0"
+  }
+}

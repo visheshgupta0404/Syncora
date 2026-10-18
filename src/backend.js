@@ -1,4 +1,44 @@
-import {createClient} from '@supabase/supabase-js';
-export const db=import.meta.env.VITE_SUPABASE_URL&&import.meta.env.VITE_SUPABASE_ANON_KEY?createClient(import.meta.env.VITE_SUPABASE_URL,import.meta.env.VITE_SUPABASE_ANON_KEY):null;
-export async function rpc(name,args){const {data,error}=await db.rpc(name,args);if(error)throw error;return data;}
-export async function signIn(){const {data,error}=await db.auth.getSession();if(error)throw error;if(!data.session){const r=await db.auth.signInAnonymously();if(r.error)throw r.error;}}
+import { createClient } from "@supabase/supabase-js";
+const url = import.meta.env.VITE_SUPABASE_URL;
+const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const captchaSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || "";
+export const db =
+  url && key && !url.includes("YOUR_PROJECT") ? createClient(url, key) : null;
+export async function rpc(name, args) {
+  const { data, error } = await db
+    .rpc(name, args)
+    .abortSignal(AbortSignal.timeout(15000));
+  if (error) throw error;
+  return data;
+}
+export async function signIn(captchaToken) {
+  const { data, error } = await db.auth.getSession();
+  if (error) throw error;
+  if (data.session) return data.session.user;
+  const result = await db.auth.signInAnonymously({ options: { captchaToken } });
+  if (result.error) throw result.error;
+  return result.data.user;
+}
+export async function readRoom(id) {
+  const { data, error } = await db
+    .from("rooms")
+    .select("*")
+    .eq("id", id)
+    .single()
+    .abortSignal(AbortSignal.timeout(15000));
+  if (error) throw error;
+  return data;
+}
+export async function measureClock() {
+  // Select the quickest roundtrip to reduce asymmetric-network error.
+  let best = { rtt: Infinity, offset: 0 };
+  for (let i = 0; i < 3; i++) {
+    const wall = Date.now(),
+      start = performance.now();
+    const server = await rpc("room_clock");
+    const rtt = performance.now() - start;
+    if (rtt < best.rtt)
+      best = { rtt, offset: Number(server) - (wall + rtt / 2) };
+  }
+  return best.offset;
+}

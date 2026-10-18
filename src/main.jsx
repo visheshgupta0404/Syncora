@@ -1,20 +1,365 @@
-import React,{useEffect,useRef,useState} from 'react';
-import {createRoot} from 'react-dom/client';
-import {registerSW} from 'virtual:pwa-register';
-import {db,rpc,signIn} from './backend';
-import {initialState,reduce,videoId} from './model';
-import Player from './Player';
-import './style.css';
-registerSW();
-function App(){
- const [room,setRoom]=useState(null),[state,setState]=useState(initialState),[name,setName]=useState('You'),[code,setCode]=useState(''),[url,setUrl]=useState(''),[title,setTitle]=useState(''),[message,setMessage]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[connection,setConnection]=useState('Offline'),[tab,setTab]=useState('queue');
- const current=useRef(null),demo=useRef(null),serial=useRef(Promise.resolve());
- function accept(r){if(current.current&&r.id===current.current.id&&r.version<current.current.version)return;current.current=r;setRoom(r);setState(r.state);}
- async function open(invite){setBusy(true);try{if(!db)throw Error('Supabase is not configured yet. Try the local demo below.');await signIn();accept(await rpc('open_room',{invite:invite||null}));}catch(e){setNotice(e.message);}finally{setBusy(false);}}
- function startDemo(){const r={id:'demo',code:'LOCAL-DEMO',state:initialState(),version:0};try{r.state=JSON.parse(localStorage.getItem('syncora-demo-v1'))||r.state;}catch{}accept(r);setConnection('Local demo · this browser only');}
- useEffect(()=>{if(!room||room.id==='demo')return;let active=true;const refresh=async()=>{const {data,error}=await db.from('rooms').select('*').eq('id',room.id).single();if(!active)return;if(error)setNotice(error.message);else accept(data);};const ch=db.channel(`room-${room.id}`).on('postgres_changes',{event:'UPDATE',schema:'public',table:'rooms',filter:`id=eq.${room.id}`},e=>accept(e.new)).subscribe(status=>{if(active){setConnection(status==='SUBSCRIBED'?'Live room':'Reconnecting…');if(status==='SUBSCRIBED')refresh();}});const timer=setInterval(refresh,15000);const visible=()=>{if(!document.hidden)refresh();};document.addEventListener('visibilitychange',visible);return()=>{active=false;clearInterval(timer);document.removeEventListener('visibilitychange',visible);db.removeChannel(ch);};},[room?.id]);
- function dispatch(a){serial.current=serial.current.then(async()=>{for(let i=0;i<4;i++){const r=current.current;if(!r)return;const next=reduce(r.state,a);if(r.id==='demo'){const updated={...r,state:next,version:r.version+1};localStorage.setItem('syncora-demo-v1',JSON.stringify(next));accept(updated);return;}try{accept(await rpc('save_room',{room_id:r.id,expected_version:r.version,next_state:next}));return;}catch(e){if(!e.message.includes('CONFLICT'))throw e;const {data,error}=await db.from('rooms').select('*').eq('id',r.id).single();if(error)throw error;accept(data);}}throw Error('Room is busy. Please try again.');}).catch(e=>setNotice(e.message));}
- function add(e){e.preventDefault();const id=videoId(url.trim());if(!id)return setNotice('Paste a valid YouTube video link or 11-character video ID.');dispatch({type:'add',payload:{id,key:crypto.randomUUID(),title:title.trim()||`YouTube · ${id}`}});setUrl('');setTitle('');}
- return <div className="shell"><header><a className="brand" href="/">≋ <span>syncora<i>together, in tune.</i></span></a><span className="badge">✦ A little closer, wherever you are</span></header>{!room?<main className="landing"><span className="eyebrow">YOUR PRIVATE ROOM FOR TWO</span><h1>Different places.<br/><em>Same moment.</em></h1><p>Press play on something you love.<br/>Share the music, the conversation, and the quiet in between.</p><section className="join panel"><label>Your name<input maxLength={30} value={name} onChange={e=>setName(e.target.value)} placeholder="What should we call you?"/></label><button className="primary" disabled={busy} onClick={()=>open(null)}>Create a room ↗</button><div className="divider">or meet someone here</div><form onSubmit={e=>{e.preventDefault();open(code);}}><label>Private room code<input required value={code} onChange={e=>setCode(e.target.value)} placeholder="Paste your invitation code"/></label><button disabled={busy}>Join room →</button></form><button className="link" onClick={startDemo}>Explore the local demo</button><small>{db?'Supabase connected · rooms last 7 days':'Local preview · connect Supabase to listen across devices'}</small></section><div className="features"><span>↔ Shared controls</span><span>♫ A queue for both of you</span><span>♡ Just two seats</span></div></main>:<main><div className="roomhead"><div><span className="eyebrow">THE LISTENING ROOM</span><h1>A moment for two<span className="dot">.</span></h1><p>{connection} · {room.members?.length||1}/2 seats claimed</p></div><div><button onClick={async()=>{try{await navigator.clipboard.writeText(room.code);setNotice('Room code copied. Share privately with your partner.');}catch{setNotice(room.code);}}}>Copy invite ↗</button><button onClick={()=>{current.current=null;setRoom(null);setState(initialState());}}>Leave</button></div></div><div className="workspace"><section className="watch panel"><div className="sectiontitle"><span>NOW PLAYING</span><span>YOUTUBE</span></div><Player state={state} onAction={dispatch} notify={setNotice}/><h2>{state.current?.title||'Your next favorite moment awaits'}</h2><p>{state.current?'Both of you can control playback.':'Add a YouTube video to the queue, then press play.'}</p><div className="note">On iPhone, tap the YouTube player to allow sound. Keep Syncora open for synchronization; background playback and PiP depend on Safari and YouTube.</div></section><aside className="panel"><nav><button className={tab==='queue'?'selected':''} onClick={()=>setTab('queue')}>Queue <b>{state.queue.length}</b></button><button className={tab==='chat'?'selected':''} onClick={()=>setTab('chat')}>Conversation <b>{state.messages.length}</b></button></nav>{tab==='queue'?<><form onSubmit={add} className="add"><label>YouTube link<input required value={url} onChange={e=>setUrl(e.target.value)} placeholder="Paste a video link…"/></label><label>Label (optional)<input value={title} maxLength={120} onChange={e=>setTitle(e.target.value)} placeholder="Give it a name"/></label><button className="primary" disabled={state.queue.length>=100}>+ Add to our queue</button></form><div className="queue">{!state.queue.length?<div className="empty">♫<h3>Make it your soundtrack</h3><p>The queue is empty.<br/>Your discoveries go here.</p></div>:state.queue.map((v,i)=><article key={v.key}><div className="track"><span className="number">{String(i+1).padStart(2,'0')}</span><strong>{v.title}</strong></div><div className="rowactions"><button onClick={()=>dispatch({type:'play',payload:v})}>Play</button><button disabled={i===0} onClick={()=>dispatch({type:'move',payload:{key:v.key,to:0}})}>Play next</button><button aria-label={`Move ${v.title} up`} disabled={i===0} onClick={()=>dispatch({type:'move',payload:{key:v.key,to:i-1}})}>↑</button><button aria-label={`Move ${v.title} down`} disabled={i===state.queue.length-1} onClick={()=>dispatch({type:'move',payload:{key:v.key,to:i+1}})}>↓</button><button aria-label={`Remove ${v.title}`} onClick={()=>dispatch({type:'remove',payload:v.key})}>×</button></div></article>)}</div></>:<div className="chat"><div className="messages" aria-live="polite">{!state.messages.length?<div className="empty">♡<h3>Say a little hello</h3><p>A conversation just for this room.</p></div>:state.messages.map(m=><article key={m.id}><small>{m.name} · {new Date(m.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</small><p>{m.text}</p></article>)}</div><form onSubmit={e=>{e.preventDefault();if(message.trim()){dispatch({type:'chat',payload:{id:crypto.randomUUID(),name:name.trim()||'Listener',text:message.trim(),at:Date.now()}});setMessage('');}}}><label>Message<input maxLength={500} required value={message} onChange={e=>setMessage(e.target.value)} placeholder="Something on your mind?"/></label><button className="primary">Send ↗</button></form></div>}</aside></div></main>}{notice?<div className="toast" role="status"><span>{notice}</span><button aria-label="Dismiss message" onClick={()=>setNotice('')}>×</button></div>:null}<footer><span>SYNCORA · BUILT FOR TWO</span><span>Install: Android browser menu · iPhone Safari → Share → Add to Home Screen</span></footer></div>;
+import React, { Component, useEffect, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { captchaSiteKey, db } from "./backend";
+import { parseInvite } from "./model";
+import { readSaved, save } from "./storage";
+import { useRoom } from "./useRoom";
+import Player from "./Player";
+import Queue from "./Queue";
+import Chat from "./Chat";
+import Captcha from "./Captcha";
+import Install from "./Install";
+import "./style.css";
+
+class ErrorBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? (
+      <main className="shell landing">
+        <h1>Let’s reconnect.</h1>
+        <p>
+          Syncora could not display this room. Reload to recover your session.
+        </p>
+        <button onClick={() => location.reload()}>Reload Syncora</button>
+      </main>
+    ) : (
+      this.props.children
+    );
+  }
 }
-createRoot(document.getElementById('root')).render(<App/>);
+function App() {
+  const [notice, setNotice] = useState(""),
+    [name, setName] = useState(() => readSaved("name", "You"));
+  const [code, setCode] = useState(() => parseInvite(location.href) || ""),
+    [token, setToken] = useState(""),
+    [captchaReset, setCaptchaReset] = useState(0),
+    [hasSession, setHasSession] = useState(false);
+  const [tab, setTab] = useState("queue");
+  const inviteDialog = useRef(null),
+    helpDialog = useRef(null);
+  const session = useRoom(setNotice),
+    { room, state, busy, status, online, offset, presence, dispatch } = session;
+  const demo = room?.id === "demo",
+    disabled = !!room && !demo && (!online || busy);
+  useEffect(() => {
+    save("name", name);
+  }, [name]);
+  useEffect(() => {
+    if (!db) return;
+    db.auth.getSession().then(({ data }) => setHasSession(!!data.session));
+    const {
+      data: { subscription },
+    } = db.auth.onAuthStateChange((_event, s) => setHasSession(!!s));
+    return () => subscription.unsubscribe();
+  }, []);
+  const verificationRequired = !!captchaSiteKey && !hasSession;
+  async function open(invite) {
+    await session.open(invite, token || undefined);
+    setToken("");
+    setCaptchaReset((n) => n + 1);
+  }
+  async function join(e) {
+    e.preventDefault();
+    const invite = parseInvite(code);
+    if (!invite)
+      return setNotice(
+        "Paste a 32-character room code or a Syncora invitation link.",
+      );
+    await open(invite);
+  }
+  async function copy(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setNotice("Invitation copied. Share it privately with your partner.");
+    } catch {
+      inviteDialog.current?.showModal();
+    }
+  }
+  const invite =
+    room && !demo
+      ? `${location.origin}${location.pathname}#room=${room.code}`
+      : "";
+  return (
+    <div className="shell">
+      <header>
+        <a className="brand" href="/" aria-label="Syncora home">
+          ≋{" "}
+          <span>
+            syncora<i>together, in tune.</i>
+          </span>
+        </a>
+        <span className="badge">✦ A little closer, wherever you are</span>
+        <Install notify={setNotice} />
+      </header>
+      {!room ? (
+        <main className="landing">
+          <span className="eyebrow">YOUR PRIVATE ROOM FOR TWO</span>
+          <h1>
+            Different places.
+            <br />
+            <em>Same moment.</em>
+          </h1>
+          <p>
+            Press play on something you love.
+            <br />
+            Share the music, the conversation, and the quiet in between.
+          </p>
+          <section className="join panel">
+            <label>
+              Your name
+              <input
+                maxLength={30}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="What should we call you?"
+                autoComplete="nickname"
+              />
+            </label>
+            {verificationRequired ? (
+              <Captcha
+                siteKey={captchaSiteKey}
+                onToken={setToken}
+                resetKey={captchaReset}
+              />
+            ) : null}
+            <button
+              className="primary"
+              disabled={busy || (verificationRequired && !token)}
+              onClick={() => open(null)}
+            >
+              {busy ? "Connecting…" : "Create a room ↗"}
+            </button>
+            <div className="divider">or meet someone here</div>
+            <form onSubmit={join}>
+              <label>
+                Private room code or invite link
+                <input
+                  required
+                  maxLength={2048}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="Paste your invitation"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
+                />
+              </label>
+              <button disabled={busy || (verificationRequired && !token)}>
+                Join room →
+              </button>
+            </form>
+            {readSaved("room")?.code ? (
+              <button
+                className="link"
+                disabled={busy || (verificationRequired && !token)}
+                onClick={() => open(readSaved("room").code)}
+              >
+                Resume your room ↔
+              </button>
+            ) : null}
+            <button className="link" disabled={busy} onClick={session.demo}>
+              Explore the local demo
+            </button>
+            <small>
+              {db
+                ? "Private rooms · two seats · expire after 7 days"
+                : "Demo available · shared rooms need Supabase setup"}
+            </small>
+          </section>
+          <div className="features">
+            <span>↔ Shared controls</span>
+            <span>♫ A queue for both of you</span>
+            <span>♡ Just two seats</span>
+          </div>
+        </main>
+      ) : (
+        <main>
+          <div className="roomhead">
+            <div>
+              <span className="eyebrow">
+                {demo ? "TRY IT OUT" : "THE LISTENING ROOM"}
+              </span>
+              <h1>
+                A moment for two<span className="dot">.</span>
+              </h1>
+              <p role="status">
+                {status}
+                {!demo
+                  ? ` · ${room.members.length}/2 seats · ${presence} device${presence === 1 ? "" : "s"} online`
+                  : ""}
+              </p>
+            </div>
+            <div className="room-actions">
+              {!demo ? (
+                <button onClick={() => inviteDialog.current.showModal()}>
+                  Invite partner ↗
+                </button>
+              ) : null}
+              <button disabled={busy} onClick={() => session.leave()}>
+                Back to lobby
+              </button>
+              {!demo ? (
+                <button
+                  disabled={busy || !online}
+                  onClick={() => session.leave(true)}
+                >
+                  Release my seat
+                </button>
+              ) : null}
+            </div>
+          </div>
+          {!online && !demo ? (
+            <div className="note" role="status">
+              You’re offline. Playback may continue locally; shared edits resume
+              after you reconnect.
+            </div>
+          ) : null}
+          <div className="workspace">
+            <section className="watch panel">
+              <div className="sectiontitle">
+                <span>NOW PLAYING</span>
+                <span>YOUTUBE</span>
+              </div>
+              <Player
+                state={state}
+                onAction={dispatch}
+                notify={setNotice}
+                offset={offset}
+                disabled={disabled}
+              />
+              <h2>
+                {state.current?.title || "Your next favorite moment awaits"}
+              </h2>
+              <p>
+                {state.current
+                  ? "Both of you can control playback."
+                  : "Add a YouTube video, then start the queue."}
+              </p>
+              <div className="note">
+                On iPhone, tap the YouTube player to allow sound. Keep Syncora
+                open for synchronization; background playback and PiP depend on
+                Safari and YouTube.
+              </div>
+              <div className="listening-as">
+                <label>
+                  Listening as
+                  <input
+                    maxLength={30}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </label>
+                {!demo ? (
+                  <small>
+                    Room expires {new Date(room.expires_at).toLocaleString()}
+                  </small>
+                ) : null}
+              </div>
+            </section>
+            <aside className="panel">
+              <nav aria-label="Room panels">
+                <button
+                  aria-pressed={tab === "queue"}
+                  className={tab === "queue" ? "selected" : ""}
+                  onClick={() => setTab("queue")}
+                >
+                  Queue <b>{state.queue.length}</b>
+                </button>
+                <button
+                  aria-pressed={tab === "chat"}
+                  className={tab === "chat" ? "selected" : ""}
+                  onClick={() => setTab("chat")}
+                >
+                  Conversation <b>{state.messages.length}</b>
+                </button>
+              </nav>
+              {tab === "queue" ? (
+                <Queue
+                  queue={state.queue}
+                  dispatch={dispatch}
+                  notify={setNotice}
+                  disabled={disabled}
+                />
+              ) : (
+                <Chat
+                  messages={state.messages}
+                  name={name}
+                  dispatch={dispatch}
+                  disabled={disabled}
+                />
+              )}
+            </aside>
+          </div>
+        </main>
+      )}
+      <dialog ref={inviteDialog} aria-labelledby="invite-title">
+        <h2 id="invite-title">A room for the two of you</h2>
+        <p>
+          Anyone with this invitation can claim the second seat. Share it
+          privately.
+        </p>
+        <label>
+          Invitation link
+          <input readOnly value={invite} onFocus={(e) => e.target.select()} />
+        </label>
+        <div className="dialog-actions">
+          <button className="primary" onClick={() => copy(invite)}>
+            Copy invitation link
+          </button>
+          <button onClick={() => copy(room?.code || "")}>Copy room code</button>
+          <button onClick={() => inviteDialog.current.close()}>Close</button>
+        </div>
+        <small>
+          Back to lobby keeps your seat. Release my seat lets someone else join;
+          the room disappears when its last member leaves.
+        </small>
+      </dialog>
+      <dialog ref={helpDialog} aria-labelledby="help-title">
+        <h2 id="help-title">A few things to know</h2>
+        <p>
+          Syncora uses YouTube’s official embedded player. Videos, ads and
+          player controls stay on YouTube; some videos cannot be embedded.
+          Playing a video shares playback data with YouTube.
+        </p>
+        <p>
+          Each iPhone may need a tap to allow playback. Keep both apps visible.
+          Screen lock, ads and buffering may interrupt synchronization. Use
+          Resync to catch up.
+        </p>
+        <p>
+          PiP is experimental and available only when your browser or YouTube
+          offers it. Syncora cannot force PiP or promise background audio.
+        </p>
+        <p>
+          Room codes are private invitations. Chat is visible to members and the
+          database administrator; it is not end-to-end encrypted. Rooms expire
+          after seven days; chat keeps the latest 100 messages.
+        </p>
+        <button onClick={() => helpDialog.current.close()}>Got it</button>
+      </dialog>
+      {notice ? (
+        <div className="toast" role="status">
+          <span>{notice}</span>
+          <button aria-label="Dismiss message" onClick={() => setNotice("")}>
+            ×
+          </button>
+        </div>
+      ) : null}
+      <footer>
+        <span>SYNCORA · BUILT FOR TWO</span>
+        <button className="link" onClick={() => helpDialog.current.showModal()}>
+          Playback, installation & privacy
+        </button>
+        <span>iPhone: Safari → Share → Add to Home Screen</span>
+      </footer>
+    </div>
+  );
+}
+createRoot(document.getElementById("root")).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>,
+);

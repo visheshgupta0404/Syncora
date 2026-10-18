@@ -1,4 +1,128 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {videoId,reduce,initialState,targetPosition} from './model.js';
-test('accepts YouTube links, rejects unrelated domains and malformed IDs',()=>{assert.equal(videoId('https://youtu.be/dQw4w9WgXcQ?t=2'),'dQw4w9WgXcQ');assert.equal(videoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),'dQw4w9WgXcQ');assert.equal(videoId('https://evil.test/watch?v=dQw4w9WgXcQ'),null);assert.equal(videoId('garbage'),null);});
-test('queue edits preserve current playback and skip consumes next item',()=>{let s=initialState();for(let i=0;i<3;i++)s=reduce(s,{type:'add',payload:{key:String(i),id:'dQw4w9WgXcQ'}});s=reduce(s,{type:'move',payload:{key:'2',to:0}});assert.deepEqual(s.queue.map(x=>x.key),['2','0','1']);s=reduce(s,{type:'skip'});assert.equal(s.current.key,'2');assert.equal(s.queue.length,2);s=reduce(s,{type:'remove',payload:'0'});assert.equal(s.current.key,'2');s=reduce(s,{type:'skip'});assert.equal(s.current.key,'1');s=reduce(s,{type:'skip'});assert.equal(s.current,null);assert.equal(s.playing,false);});
-test('playback timestamp advances only while playing and chat is bounded',()=>{assert.equal(targetPosition({position:10,playing:true,at:1000},4000),13);assert.equal(targetPosition({position:10,playing:false,at:1000},4000),10);let s=initialState();for(let i=0;i<105;i++)s=reduce(s,{type:'chat',payload:{id:i}});assert.equal(s.messages.length,100);assert.equal(s.messages[0].id,5);});
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import {
+  videoId,
+  reduce,
+  initialState,
+  targetPosition,
+  parseInvite,
+  formatTime,
+} from "./model.js";
+import { playbackDecision } from "./playerSync.js";
+const track = (n) => ({
+  key: String(n),
+  id: "dQw4w9WgXcQ",
+  title: `Track ${n}`,
+});
+test("YouTube links accept video formats and reject lookalike domains/protocols", () => {
+  for (const link of [
+    "https://youtu.be/dQw4w9WgXcQ?t=2",
+    "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "https://youtube.com/shorts/dQw4w9WgXcQ",
+    "dQw4w9WgXcQ",
+  ])
+    assert.equal(videoId(link), "dQw4w9WgXcQ");
+  for (const link of [
+    "https://evil.test/watch?v=dQw4w9WgXcQ",
+    "https://youtube.com.evil.test/watch?v=dQw4w9WgXcQ",
+    "ftp://youtube.com/watch?v=dQw4w9WgXcQ",
+    "garbage",
+  ])
+    assert.equal(videoId(link), null);
+});
+test("queue edits and play-next preserve playback; stale commands cannot resurrect removed tracks", () => {
+  let s = initialState();
+  for (let i = 0; i < 3; i++) s = reduce(s, { type: "add", payload: track(i) });
+  s = reduce(s, { type: "move", payload: { key: "2", to: 0 } });
+  assert.deepEqual(
+    s.queue.map((x) => x.key),
+    ["2", "0", "1"],
+  );
+  s = reduce(s, { type: "skip", payload: { key: null } });
+  assert.equal(s.current.key, "2");
+  s = reduce(s, { type: "remove", payload: { key: "0" } });
+  s = reduce(s, { type: "play", payload: { key: "0" } });
+  assert.equal(s.current.key, "2");
+  s = reduce(s, { type: "skip", payload: { key: "2" } });
+  assert.equal(s.current.key, "1");
+  s = reduce(s, { type: "skip", payload: { key: "2" } });
+  assert.equal(s.current.key, "1");
+  s = reduce(s, { type: "skip", payload: { key: "1" } });
+  assert.equal(s.current, null);
+  assert.equal(s.playing, false);
+});
+test("transport rejects old-track events and invalid positions", () => {
+  const s = { ...initialState(), current: track(1) };
+  assert.equal(
+    reduce(s, {
+      type: "transport",
+      payload: { key: "old", playing: true, position: 10 },
+    }).playing,
+    false,
+  );
+  assert.throws(() =>
+    reduce(s, {
+      type: "transport",
+      payload: { key: "1", playing: true, position: NaN },
+    }),
+  );
+  assert.equal(
+    targetPosition({ position: 10, playing: true, at: 1000 }, 4000),
+    13,
+  );
+  assert.equal(
+    targetPosition({ position: 10, playing: false, at: 1000 }, 4000),
+    10,
+  );
+});
+test("chat and queue have bounds and reject invalid content", () => {
+  let s = initialState();
+  for (let i = 0; i < 105; i++)
+    s = reduce(s, {
+      type: "chat",
+      payload: { id: i, text: "Hello", name: "A" },
+    });
+  assert.equal(s.messages.length, 100);
+  assert.equal(s.messages[0].id, 5);
+  assert.throws(() =>
+    reduce(s, { type: "chat", payload: { name: "A", text: " ".repeat(5) } }),
+  );
+  for (let i = 0; i < 100; i++)
+    s = reduce(s, { type: "add", payload: track(i) });
+  assert.throws(() => reduce(s, { type: "add", payload: track(100) }), /full/);
+});
+test("invitation parsing uses fragments and validates code length", () => {
+  const code = "abcdef0123456789abcdef0123456789";
+  assert.equal(parseInvite(`https://syncora.example/#room=${code}`), code);
+  assert.equal(parseInvite(code.toUpperCase()), code);
+  assert.equal(parseInvite("short"), null);
+  assert.equal(formatTime(125), "2:05");
+});
+test("playback correction distinguishes a seek, drift, buffering and blocked playback", () => {
+  const state = {
+    ...initialState(),
+    current: track(1),
+    position: 10,
+    playing: true,
+    at: 1000,
+  };
+  const base = {
+    state,
+    position: 20,
+    playerState: 1,
+    previous: null,
+    now: 2000,
+    suppressed: false,
+  };
+  assert.equal(playbackDecision(base).type, "correct");
+  assert.equal(
+    playbackDecision({
+      ...base,
+      previous: { position: 10, at: 1000, playing: true },
+    }).type,
+    "publish",
+  );
+  assert.equal(playbackDecision({ ...base, playerState: 3 }).type, "wait");
+  assert.equal(playbackDecision({ ...base, suppressed: true }).type, "wait");
+  assert.equal(playbackDecision({ ...base, position: 11 }).type, "wait");
+});
