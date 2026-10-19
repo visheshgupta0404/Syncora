@@ -73,7 +73,7 @@ Anonymous Auth users are separate from room data. Review Supabase's [anonymous u
 
 ## 5. Acceptance on Android and iPhone
 
-Use the checks in [VERIFICATION.md](VERIFICATION.md) before calling the hosted service complete. Start in normal browsers, then repeat in installed mode. Share the invitation privately; a seventh fresh browser should be refused. Never promise PiP/background audio if the native browser/player does not offer it.
+Use the checks in [VERIFICATION.md](VERIFICATION.md) before calling the hosted service complete. Start in normal browsers, then repeat in installed mode. Share the invitation privately; a seventh fresh browser should be refused. Background audio is not guaranteed; keep the app visible for synchronized playback.
 
 ## Upgrade existing rooms to six seats
 

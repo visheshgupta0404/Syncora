@@ -256,8 +256,7 @@ function App() {
               </p>
               <div className="note">
                 On iPhone, tap the YouTube player to allow sound. Keep Syncora
-                open for synchronization; background playback and PiP depend on
-                Safari and YouTube.
+                open for synchronization. Background playback is not guaranteed.
               </div>
               <div className="listening-as">
                 <label>
@@ -380,10 +379,6 @@ function App() {
           Each iPhone may need a tap to allow playback. Keep everyone’s app
           visible. Screen lock, ads and buffering may interrupt synchronization.
           Use Resync to catch up.
-        </p>
-        <p>
-          PiP is experimental and available only when your browser or YouTube
-          offers it. Syncora cannot force PiP or promise background audio.
         </p>
         <p>
           Room codes are private invitations. Chat is visible to members and the

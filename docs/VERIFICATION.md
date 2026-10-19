@@ -81,6 +81,6 @@ The table below remains the device/release checklist; backend rules and desktop 
 | Expiry/cleanup                               | Expired room is inaccessible and removed on next cleanup              |
 | Install on Android and iPhone                | Icons/standalone shell work; offline shell loads                      |
 | New deployment                               | Update prompt appears and reload installs the new shell               |
-| Full-screen/PiP                              | Native behavior/fallback is accurate; unavailable PiP is not promised |
+| Full-screen                              | Browser full-screen or the native YouTube player fallback works |
 
 Keep videos foregrounded on everyone’s device. Ads, buffering and iOS restrictions can create temporary drift; use Resync. Hosted Auth/PostgREST, WebSocket delivery and the public deployment have been verified; physical-device playback, CAPTCHA and installation still need acceptance.

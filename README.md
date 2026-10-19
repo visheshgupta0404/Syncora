@@ -11,7 +11,7 @@ A private listening room for up to six people, built with React, Vite, Supabase 
 - Room chat, persistent listener name and latest 100 messages; messages carry server-assigned authors and timestamps.
 - Room recovery after reload, connection status, private presence, reconnect fetches, local offline detection and explicit seat release.
 - Server-clock offset measurement and drift correction. Track-scoped commands prevent stale playback events from advancing or rewinding another video.
-- Full-screen with a native-player fallback on iPhone. Experimental PiP guidance for native browser/player options; no forced PiP or audio extraction.
+- Full-screen with a native-player fallback on iPhone.
 - Install icons, cached offline app shell, update notification, optional Cloudflare Turnstile, server-side validation, bounded retry deduplication and request limits.
 
 ## Run locally
@@ -59,7 +59,7 @@ Uses the official IFrame Player API. Syncora does not download or extract media,
 
 Each iPhone may require a direct tap to enable sound. Keep both apps visible: screen lock, app switching, ads and buffering can disrupt playback or synchronization. Playback is approximate, not sample-accurate; **Resync** catches a device up. There is no background-audio guarantee.
 
-The cross-origin embed does not expose its video element to Syncora. The PiP button explains how to use a native Safari/YouTube/browser PiP option if offered. Programmatically forced PiP is not implemented or promised on iPhone, Android or installed PWAs. Full-screen uses the browser API where available and otherwise the YouTube player button.
+Full-screen uses the browser API where available and otherwise the YouTube player button.
 
 Install on Android through the browser's **Install app** option. On iPhone use **Safari → Share → Add to Home Screen**. Installation and service workers require HTTPS (localhost is allowed for development). Only the app shell is cached; YouTube and shared rooms still need internet. Updates apply when you choose the update button, which reloads the app.
 
