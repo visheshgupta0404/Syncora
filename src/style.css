@@ -641,3 +641,54 @@ header {
     transition: none !important;
   }
 }
+.youtube-search {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #30394c;
+}
+.youtube-search form {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+.youtube-search label {
+  flex: 1;
+  min-width: 0;
+}
+.search-results article {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+}
+.search-results img {
+  width: 100px;
+  height: auto;
+  border-radius: 6px;
+}
+.search-results article > div {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.search-results a {
+  color: #e7edff;
+  font-size: 13px;
+}
+.search-results small {
+  display: block;
+  color: #9ba9c4;
+  margin-top: 5px;
+}
+@media (max-width: 550px) {
+  .youtube-search form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-results article {
+    flex-wrap: wrap;
+  }
+  .search-results article > button {
+    margin-left: auto;
+  }
+}

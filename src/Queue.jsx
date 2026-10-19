@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { videoId } from "./model";
+import YouTubeSearch from "./YouTubeSearch";
 export default function Queue({ queue, dispatch, notify, disabled }) {
   const [url, setUrl] = useState(""),
     [title, setTitle] = useState(""),
@@ -26,6 +27,12 @@ export default function Queue({ queue, dispatch, notify, disabled }) {
   }
   return (
     <>
+      <YouTubeSearch
+        dispatch={dispatch}
+        disabled={disabled}
+        full={queue.length >= 100}
+        notify={notify}
+      />
       <form onSubmit={add} className="add">
         <label>
           YouTube link
