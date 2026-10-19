@@ -55,7 +55,7 @@ begin
  select * into r from rooms where code = lower(invite) and expires_at > now() for update;
  if r.id is null then raise exception 'Room not found or expired'; end if;
  if not auth.uid() = any(r.members) then
- if cardinality(r.members) >= 2 then raise exception 'This room already has two members'; end if;
+ if cardinality(r.members) >= 6 then raise exception 'This room is full (maximum 6 people)'; end if;
  if (select count(*) from rooms where auth.uid() = any(members) and expires_at > now()) >= 5
  then raise exception 'You already have five active rooms. Leave one first.'; end if;
  update rooms set members = array_append(members, auth.uid()), version = version + 1
@@ -126,7 +126,7 @@ begin
  else raise exception 'Unknown command'; end if;
  s := jsonb_set(s, '{queue}', q);
  update rooms set state = s, version = version + 1,
- recent_commands = (array_prepend(receipt, recent_commands))[1:512]
+ recent_commands = (array_prepend(receipt, recent_commands))[1:2048]
  where id = room_id returning * into r;
  return r;
 end $$;

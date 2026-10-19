@@ -1,4 +1,4 @@
-// Opt-in hosted check. Creates three guest identities; deletes its room afterward.
+// Opt-in hosted check. Creates seven guest identities; deletes its room afterward.
 import { createClient } from "@supabase/supabase-js";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -13,7 +13,7 @@ if (process.env.VITE_TURNSTILE_SITE_KEY)
   throw Error(
     "Use manual browser acceptance with CAPTCHA enabled; this script does not solve challenges.",
   );
-const clients = Array.from({ length: 3 }, () =>
+const clients = Array.from({ length: 7 }, () =>
   createClient(url, key, {
     auth: {
       persistSession: false,
@@ -43,20 +43,25 @@ try {
     if (error) throw error;
     await c.realtime.setAuth(data.session.access_token);
   }
-  console.log("PASS: three independent guest sessions");
+  console.log("PASS: seven independent guest sessions");
   room = await rpc(clients[0], "open_room", { invite: null });
-  await rpc(clients[1], "open_room", { invite: room.code });
+  for (let i = 1; i < 6; i++) {
+    const joined = await rpc(clients[i], "open_room", { invite: room.code });
+    assert.equal(joined.members.length, i + 1);
+  }
   await assert.rejects(
-    rpc(clients[2], "open_room", { invite: room.code }),
-    (e) => e.message.includes("two members"),
+    rpc(clients[6], "open_room", { invite: room.code }),
+    (e) => e.message.includes("maximum 6 people"),
   );
-  const outsider = await clients[2]
+  const outsider = await clients[6]
     .from("rooms")
     .select("id")
     .eq("id", room.id);
   assert.ifError(outsider.error);
   assert.equal(outsider.data.length, 0);
-  console.log("PASS: room admission, third-user rejection and RLS isolation");
+  console.log(
+    "PASS: six-member admission, seventh-user rejection and RLS isolation",
+  );
   const subscribed = new Promise((resolve, reject) => {
     const timer = setTimeout(
       () => reject(Error("Private realtime subscription timed out")),
@@ -138,22 +143,29 @@ try {
     position: 30,
   });
   assert.equal(r.state.position, 30);
-  await Promise.all([
-    edit(clients[0], "chat", { name: "A", text: "Hosted test A" }),
-    edit(clients[1], "chat", { name: "B", text: "Hosted test B" }),
-  ]);
+  await Promise.all(
+    clients
+      .slice(0, 6)
+      .map((c, i) =>
+        edit(c, "chat", {
+          name: `Listener ${i + 1}`,
+          text: `Hosted test ${i + 1}`,
+        }),
+      ),
+  );
   const read = await clients[1]
     .from("rooms")
     .select("*")
     .eq("id", room.id)
     .single();
   assert.ifError(read.error);
-  assert.equal(read.data.state.messages.length, 2);
+  assert.equal(read.data.state.messages.length, 6);
   console.log(
-    "PASS: play, pause/seek, concurrent chat and persisted state readback",
+    "PASS: play, pause/seek, six-member concurrent chat and persisted state readback",
   );
   await rpc(clients[1], "leave_room", { room_id: room.id });
-  await rpc(clients[2], "open_room", { invite: room.code });
+  const replacement = await rpc(clients[6], "open_room", { invite: room.code });
+  assert.equal(replacement.members.length, 6);
   console.log("PASS: seat release and replacement membership");
 } finally {
   if (channel) await clients[1].removeChannel(channel);

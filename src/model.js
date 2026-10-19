@@ -1,3 +1,5 @@
+export const ROOM_CAPACITY = 6;
+
 export function videoId(input) {
   if (/^[\w-]{11}$/.test(input)) return input;
   try {

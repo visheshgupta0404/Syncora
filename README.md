@@ -1,10 +1,10 @@
 # Syncora
 
-A private listening room for two, built with React, Vite, Supabase and an installable PWA shell. Designed for Android and iPhone. The application can run as a local demo without any account or credentials; sharing across devices needs a Supabase project.
+A private listening room for up to six people, built with React, Vite, Supabase and an installable PWA shell. Designed for Android and iPhone. The application can run as a local demo without any account or credentials; sharing across devices needs a Supabase project.
 
 ## Features
 
-- Random private invitation codes and shareable links; database-enforced two-person capacity.
+- Random private invitation codes and shareable links; database-enforced six-person capacity.
 - Official YouTube player with visible native controls; shared play/pause, seek slider, ±10 seconds, skip and manual resync.
 - Shared queue: add, remove, reorder, play immediately and play next; up to 100 videos.
 - Room chat, persistent listener name and latest 100 messages; messages carry server-assigned authors and timestamps.
@@ -42,13 +42,13 @@ Never put a service-role key, secret key, database password or Turnstile secret 
 
 ## Room behavior and privacy
 
-Invitation codes use random UUIDs without separators. Only two authenticated identities may claim a room. Both have equal control; display names are labels, not verified identities. Invitation links use URL fragments, and the fragment is removed before mounting the YouTube player so its widget does not receive the invitation in the page URL.
+Invitation codes use random UUIDs without separators. Up to six authenticated identities may claim a room, including its creator. Everyone has equal control; display names are labels, not verified identities. Invitation links use URL fragments, and the fragment is removed before mounting the YouTube player so its widget does not receive the invitation in the page URL.
 
 **Back to lobby** keeps your seat and offers Resume room. **Release my seat** removes membership; the last release deletes the room and history. New members can see retained queue and chat. Browser-data deletion loses the anonymous identity; create a new room if the old seat cannot be released. Rooms expire after seven days. Expired rooms are inaccessible and are removed on a subsequent room-open request, or by the admin-only cleanup function.
 
-Chat is not end-to-end encrypted. Both members and the Supabase project administrator can read it. Do not treat a room code as an account password or share the invitation publicly. Private presence is restricted by Realtime authorization policies. Authentication CAPTCHA should be enabled before public exposure. Per-identity limits apply to accepted room opens and edits; CAPTCHA and Supabase Auth rate limits protect identity creation. This small two-person app is not a hardened public multi-tenant service.
+Chat is not end-to-end encrypted. All members and the Supabase project administrator can read it. Do not treat a room code as an account password or share the invitation publicly. Private presence is restricted by Realtime authorization policies. Authentication CAPTCHA should be enabled before public exposure. Per-identity limits apply to accepted room opens and edits; CAPTCHA and Supabase Auth rate limits protect identity creation. This small-group app is not a hardened public multi-tenant service.
 
-Commands are applied under a database row lock, with 512 recent command receipts per room to deduplicate immediate network retries. Automatic end-of-video skip checks the current queue item so two players cannot skip twice. Old-track transport and removed-item edits are ignored. Offline edits are rejected rather than replayed later. Realtime delivers updates; a 15-second recovery fetch and visibility/network events restore state when needed. Presence counts identities, so two tabs from the same browser count once.
+Commands are applied under a database row lock, with 2048 recent command receipts per room to deduplicate immediate network retries. Automatic end-of-video skip checks the current queue item so several players cannot advance the queue more than once. Old-track transport and removed-item edits are ignored. Offline edits are rejected rather than replayed later. Realtime delivers updates; a 15-second recovery fetch and visibility/network events restore state when needed. Presence counts identities, so two tabs from the same browser count once.
 
 ## YouTube and iPhone limitations
 

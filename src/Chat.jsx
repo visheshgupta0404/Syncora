@@ -78,7 +78,7 @@ export default function Chat({ messages, name, dispatch, disabled }) {
         </button>
       </form>
       <small className="muted">
-        Latest 100 messages · visible to both room members
+        Latest 100 messages · visible to all room members
       </small>
     </div>
   );

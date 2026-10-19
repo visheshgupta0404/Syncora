@@ -43,7 +43,7 @@ In **Workers & Pages → Create → Pages → Connect Git**, select `visheshgupt
 
 Deploy and use the generated HTTPS URL on both phones. With Git integration, future pushes to `main` deploy automatically. `_headers` applies browser security headers and preserves the origin referrer required by YouTube embeds. It allows the standard `*.supabase.co` endpoints; update CSP if using a custom Supabase domain.
 
-Do not select a paid plan or custom domain for this two-person project. Free tiers have quotas and may pause inactive services; check [Supabase limits](https://supabase.com/docs/guides/platform/billing-on-supabase) and [Pages limits](https://developers.cloudflare.com/pages/platform/limits/).
+Do not select a paid plan or custom domain for this six-person project. Free tiers have quotas and may pause inactive services; check [Supabase limits](https://supabase.com/docs/guides/platform/billing-on-supabase) and [Pages limits](https://developers.cloudflare.com/pages/platform/limits/).
 
 ## Alternative: manual GitHub Actions deployment
 
@@ -71,4 +71,8 @@ Anonymous Auth users are separate from room data. Review Supabase's [anonymous u
 
 ## 5. Acceptance on Android and iPhone
 
-Use the checks in [VERIFICATION.md](VERIFICATION.md) before calling the hosted service complete. Start in normal browsers, then repeat in installed mode. Share the invitation privately; a third fresh browser should be refused. Never promise PiP/background audio if the native browser/player does not offer it.
+Use the checks in [VERIFICATION.md](VERIFICATION.md) before calling the hosted service complete. Start in normal browsers, then repeat in installed mode. Share the invitation privately; a seventh fresh browser should be refused. Never promise PiP/background audio if the native browser/player does not offer it.
+
+## Upgrade existing rooms to six seats
+
+For an existing installation, run `supabase/migrations/20261019_six_member_rooms.sql` in the SQL editor before deploying the updated frontend. This replaces the admission function and increases the retry receipt window; it preserves room IDs, invitation codes, memberships, queues and messages. New installations can use the full `supabase/schema.sql`. Existing two-person rooms gain four available seats.

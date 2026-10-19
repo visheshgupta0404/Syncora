@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: "Syncora",
           short_name: "Syncora",
-          description: "A private listening room for two",
+          description: "A private listening room for up to six people",
           theme_color: "#10141f",
           background_color: "#10141f",
           display: "standalone",

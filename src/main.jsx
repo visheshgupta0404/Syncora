@@ -1,7 +1,7 @@
 import React, { Component, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { captchaSiteKey, db } from "./backend";
-import { parseInvite } from "./model";
+import { parseInvite, ROOM_CAPACITY } from "./model";
 import { readSaved, save } from "./storage";
 import { useRoom } from "./useRoom";
 import Player from "./Player";
@@ -96,7 +96,7 @@ function App() {
       </header>
       {!room ? (
         <main className="landing">
-          <span className="eyebrow">YOUR PRIVATE ROOM FOR TWO</span>
+          <span className="eyebrow">YOUR PRIVATE LISTENING ROOM</span>
           <h1>
             Different places.
             <br />
@@ -165,14 +165,14 @@ function App() {
             </button>
             <small>
               {db
-                ? "Private rooms · two seats · expire after 7 days"
+                ? `Private rooms · ${ROOM_CAPACITY} seats · expire after 7 days`
                 : "Demo available · shared rooms need Supabase setup"}
             </small>
           </section>
           <div className="features">
             <span>↔ Shared controls</span>
-            <span>♫ A queue for both of you</span>
-            <span>♡ Just two seats</span>
+            <span>♫ A queue for everyone</span>
+            <span>♡ Up to {ROOM_CAPACITY} people</span>
           </div>
         </main>
       ) : (
@@ -183,12 +183,12 @@ function App() {
                 {demo ? "TRY IT OUT" : "THE LISTENING ROOM"}
               </span>
               <h1>
-                A moment for two<span className="dot">.</span>
+                A moment, shared<span className="dot">.</span>
               </h1>
               <p role="status">
                 {status}
                 {!demo
-                  ? ` · ${room.members.length}/2 seats · ${presence} device${presence === 1 ? "" : "s"} online`
+                  ? ` · ${room.members.length}/${ROOM_CAPACITY} seats · ${presence} device${presence === 1 ? "" : "s"} online`
                   : ""}
               </p>
             </div>
@@ -235,7 +235,7 @@ function App() {
               </h2>
               <p>
                 {state.current
-                  ? "Both of you can control playback."
+                  ? "Everyone in the room can control playback."
                   : "Add a YouTube video, then start the queue."}
               </p>
               <div className="note">
@@ -296,9 +296,10 @@ function App() {
         </main>
       )}
       <dialog ref={inviteDialog} aria-labelledby="invite-title">
-        <h2 id="invite-title">A room for the two of you</h2>
+        <h2 id="invite-title">Invite your people</h2>
         <p>
-          Anyone with this invitation can claim the second seat. Share it
+          Up to {ROOM_CAPACITY} people, including you, can join this room.
+          Anyone with this invitation can claim an available seat. Share it
           privately.
         </p>
         <label>
@@ -325,9 +326,9 @@ function App() {
           Playing a video shares playback data with YouTube.
         </p>
         <p>
-          Each iPhone may need a tap to allow playback. Keep both apps visible.
-          Screen lock, ads and buffering may interrupt synchronization. Use
-          Resync to catch up.
+          Each iPhone may need a tap to allow playback. Keep everyone’s app
+          visible. Screen lock, ads and buffering may interrupt synchronization.
+          Use Resync to catch up.
         </p>
         <p>
           PiP is experimental and available only when your browser or YouTube
@@ -349,7 +350,7 @@ function App() {
         </div>
       ) : null}
       <footer>
-        <span>SYNCORA · BUILT FOR TWO</span>
+        <span>SYNCORA · BETTER TOGETHER</span>
         <button className="link" onClick={() => helpDialog.current.showModal()}>
           Playback, installation & privacy
         </button>

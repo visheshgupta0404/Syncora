@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { randomUUID } from "node:crypto";
 let pg;
-const users = [randomUUID(), randomUUID(), randomUUID()];
+const users = Array.from({ length: 7 }, () => randomUUID());
 async function identity(user = users[0], role = "authenticated") {
   await pg.exec("reset role");
   await pg.query("select set_config('request.jwt.claim.sub',$1,false)", [
@@ -51,16 +51,20 @@ beforeEach(async () => {
   await pg.exec("reset role;truncate public.rooms,public.room_limits");
   await identity();
 });
-test("two-member room, outsider RLS, blocked writes and anonymous RPC access", async () => {
+test("six-member room, seventh-user rejection, outsider RLS and blocked writes", async () => {
   const r = await open();
-  await identity(users[1]);
-  await open(r.code);
-  await identity(users[2]);
-  await assert.rejects(open(r.code), /two members/);
+  for (let i = 1; i < 6; i++) {
+    await identity(users[i]);
+    assert.equal((await open(r.code)).members.length, i + 1);
+  }
+  // Existing members can rejoin a full room without taking another seat.
+  assert.equal((await open(r.code)).members.length, 6);
+  await identity(users[6]);
+  await assert.rejects(open(r.code), /maximum 6 people/);
   assert.equal((await pg.query("select * from rooms")).rows.length, 0);
   await assert.rejects(action(r, "add", track(1)), /access denied/);
   await assert.rejects(
-    pg.query("update rooms set members=$1 where id=$2", [[users[2]], r.id]),
+    pg.query("update rooms set members=$1 where id=$2", [[users[6]], r.id]),
     /permission denied/,
   );
   await identity(null, "anon");
@@ -91,6 +95,51 @@ test("atomic commands, retries, stale skip and no resurrection", async () => {
   r = await action(r, "remove", { key: "3" });
   r = await action(r, "play", { key: "3" });
   assert.equal(r.state.current.key, "1");
+});
+test("six-seat migration preserves existing two-person rooms and their history", async () => {
+  let r = await open();
+  await identity(users[1]);
+  await open(r.code);
+  r = await action(r, "add", track(1));
+  r = await action(r, "chat", {
+    name: "Existing member",
+    text: "Keep this message",
+  });
+  await pg.exec("reset role");
+  const schema = await readFile(
+    new URL("../supabase/schema.sql", import.meta.url),
+    "utf8",
+  );
+  const legacyOpen = schema
+    .slice(
+      schema.indexOf("create or replace function public.open_room("),
+      schema.indexOf("\ndrop function if exists public.save_room"),
+    )
+    .replace(">= 6", ">= 2");
+  await pg.exec(legacyOpen);
+  await identity(users[2]);
+  await assert.rejects(open(r.code), /maximum 6 people/);
+  await pg.exec("reset role");
+  const migration = await readFile(
+    new URL(
+      "../supabase/migrations/20261019_six_member_rooms.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  await pg.exec(migration);
+  await pg.exec(migration);
+  const preserved = (await pg.query("select * from rooms where id=$1", [r.id]))
+    .rows[0];
+  assert.deepEqual(preserved.state, r.state);
+  assert.deepEqual(preserved.members, r.members);
+  assert.equal(preserved.code, r.code);
+  for (let i = 2; i < 6; i++) {
+    await identity(users[i]);
+    assert.equal((await open(r.code)).members.length, i + 1);
+  }
+  await identity(users[6]);
+  await assert.rejects(open(r.code), /maximum 6 people/);
 });
 test("server validates payloads and stamps authors and timestamps", async () => {
   let r = await open();
