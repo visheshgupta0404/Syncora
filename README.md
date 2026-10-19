@@ -32,7 +32,9 @@ npm run preview
 
 ## Connect and deploy
 
-Follow [the deployment guide](docs/DEPLOYMENT.md). The owner's free Supabase project is configured in Mumbai, the schema and anonymous Auth are enabled, and hosted room/realtime acceptance checks have passed. Local connection settings are in ignored `.env.local`; no keys are committed. Public hosting still needs Cloudflare configuration.
+Production: [syncora-a6v.pages.dev](https://syncora-a6v.pages.dev/).
+
+Cloudflare Pages is connected to this repository's `main` branch with automatic deployments, build command `npm run build`, output directory `dist`, and Node 24. Public Supabase connection settings are configured in Pages. The owner's free Supabase project is configured in Mumbai; its schema and anonymous Auth are enabled, and hosted room/realtime checks have passed. Local connection settings stay in ignored `.env.local`; no keys are committed. See [the deployment guide](docs/DEPLOYMENT.md) to reproduce the setup.
 
 Copy `.env.example` to `.env.local`, fill in the Supabase URL and **public publishable/anon key**, then restart Vite. Run `supabase/schema.sql` in the Supabase SQL editor and enable anonymous authentication. The schema can be rerun and upgrades milestone 1. It removes the old whole-state writer in favor of validated commands.
 

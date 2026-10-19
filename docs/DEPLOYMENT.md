@@ -1,6 +1,8 @@
 # Free deployment
 
-The owner's free Supabase project is configured in Mumbai with the application schema and anonymous sign-in enabled. Its connection settings are saved only in ignored `.env.local`. Hosted API/realtime checks have passed. Cloudflare hosting and optional CAPTCHA configuration are still pending. The steps below also document how to reproduce the setup.
+Cloudflare Pages project `syncora` serves [syncora-a6v.pages.dev](https://syncora-a6v.pages.dev/) and automatically builds commits to `main`. Production settings are `npm run build`, output `dist`, Node 24, and the public Supabase URL/publishable key. These must be configured in Pages; serving the repository root instead of `dist` produces a blank app.
+
+The owner's free Supabase project is configured in Mumbai with the application schema and anonymous sign-in enabled. Local connection settings are saved only in ignored `.env.local`. Hosted API/realtime checks have passed. Optional CAPTCHA setup and physical-phone acceptance remain. The steps below document how to reproduce the setup.
 
 ## 1. Supabase
 
