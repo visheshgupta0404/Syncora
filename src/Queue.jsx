@@ -33,33 +33,36 @@ export default function Queue({ queue, dispatch, notify, disabled }) {
         full={queue.length >= 100}
         notify={notify}
       />
-      <form onSubmit={add} className="add">
-        <label>
-          YouTube link
-          <input
-            required
-            maxLength={2048}
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste a video link…"
-          />
-        </label>
-        <label>
-          Label (optional)
-          <input
-            value={title}
-            maxLength={120}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Give it a name"
-          />
-        </label>
-        <button
-          className="primary"
-          disabled={disabled || pending || queue.length >= 100}
-        >
-          {pending ? "Adding…" : "+ Add to our queue"}
-        </button>
-      </form>
+      <details className="paste-video">
+        <summary>Paste a YouTube link</summary>
+        <form onSubmit={add} className="add">
+          <label>
+            YouTube link
+            <input
+              required
+              maxLength={2048}
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="Paste a video link…"
+            />
+          </label>
+          <label>
+            Label (optional)
+            <input
+              value={title}
+              maxLength={120}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Give it a name"
+            />
+          </label>
+          <button
+            className="primary"
+            disabled={disabled || pending || queue.length >= 100}
+          >
+            {pending ? "Adding…" : "+ Add to our queue"}
+          </button>
+        </form>
+      </details>
       <div className="queue">
         {queue.length ? (
           queue.map((v, i) => (

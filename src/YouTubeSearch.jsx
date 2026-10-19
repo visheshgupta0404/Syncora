@@ -79,64 +79,74 @@ export default function YouTubeSearch({ dispatch, disabled, full, notify }) {
     }
   }
   return (
-    <section className="youtube-search" aria-label="Search YouTube">
-      <form onSubmit={search}>
-        <label>
-          Search YouTube
-          <input
-            type="search"
-            required
-            maxLength={100}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Song, artist, or video…"
-          />
-        </label>
-        <button disabled={disabled || busy || !db || !query.trim()}>
-          {busy ? "Searching…" : "Search YouTube"}
-        </button>
-      </form>
-      <small className="muted">
-        Searches are sent to YouTube. Videos play in its official player.
-      </small>
-      <p role="status">{message}</p>
-      <div className="search-results" aria-busy={busy}>
-        {items.map((video) => (
-          <article key={video.id}>
-            <img
-              src={video.thumbnail}
-              alt=""
-              loading="lazy"
-              width="120"
-              height="68"
-              referrerPolicy="no-referrer"
+    <details className="youtube-search">
+      <summary>
+        Search YouTube <span>Find a song or video</span>
+      </summary>
+      <section className="search-content" aria-label="Search YouTube">
+        <form onSubmit={search}>
+          <label>
+            Search YouTube
+            <input
+              type="search"
+              required
+              maxLength={100}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Song, artist, or video…"
             />
-            <div>
-              <a
-                href={`https://www.youtube.com/watch?v=${video.id}`}
-                target="_blank"
-                rel="noreferrer"
+          </label>
+          <button disabled={disabled || busy || !db || !query.trim()}>
+            {busy ? "Searching…" : "Search"}
+          </button>
+        </form>
+        <p className="search-status" role="status">
+          {message}
+        </p>
+        <div className="search-results" aria-busy={busy}>
+          {items.map((video) => (
+            <article key={video.id}>
+              <img
+                src={video.thumbnail}
+                alt=""
+                loading="lazy"
+                width="120"
+                height="68"
+                referrerPolicy="no-referrer"
+              />
+              <div>
+                <a
+                  href={`https://www.youtube.com/watch?v=${video.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {video.title}
+                </a>
+                <small>{video.channel}</small>
+              </div>
+              <button
+                disabled={
+                  disabled ||
+                  full ||
+                  adding !== null ||
+                  added.includes(video.id)
+                }
+                onClick={() => add(video)}
+                aria-label={`Add ${video.title} to queue`}
               >
-                {video.title}
-              </a>
-              <small>{video.channel}</small>
-            </div>
-            <button
-              disabled={
-                disabled || full || adding !== null || added.includes(video.id)
-              }
-              onClick={() => add(video)}
-              aria-label={`Add ${video.title} to queue`}
-            >
-              {added.includes(video.id)
-                ? "Added ✓"
-                : adding === video.id
-                  ? "Adding…"
-                  : "+ Add to queue"}
-            </button>
-          </article>
-        ))}
-      </div>
-    </section>
+                {added.includes(video.id)
+                  ? "✓"
+                  : adding === video.id
+                    ? "Adding…"
+                    : "+ Add"}
+              </button>
+            </article>
+          ))}
+        </div>
+        <small className="muted search-credit">
+          Results from YouTube · Searches are sent to YouTube.
+        </small>
+      </section>
+    </details>
   );
 }
