@@ -24,6 +24,9 @@ export default function Queue({ queue, currentKey, dispatch, disabled }) {
                 {v.key === currentKey ? (
                   <small className="now-playing">▶ Now playing</small>
                 ) : null}
+                {v.key !== currentKey && i === (currentKey ? 1 : 0) ? (
+                  <small className="now-playing">Up next</small>
+                ) : null}
                 {v.title}
               </strong>
             </div>
@@ -57,7 +60,7 @@ export default function Queue({ queue, currentKey, dispatch, disabled }) {
               </button>
               <button
                 aria-label={`Move ${v.title} up`}
-                disabled={disabled || i === 0}
+                disabled={disabled || i === 0 || (currentKey && i === 1)}
                 onClick={() =>
                   dispatch({
                     type: "move",
@@ -69,7 +72,9 @@ export default function Queue({ queue, currentKey, dispatch, disabled }) {
               </button>
               <button
                 aria-label={`Move ${v.title} down`}
-                disabled={disabled || i === queue.length - 1}
+                disabled={
+                  disabled || v.key === currentKey || i === queue.length - 1
+                }
                 onClick={() =>
                   dispatch({
                     type: "move",

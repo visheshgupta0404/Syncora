@@ -107,16 +107,21 @@ begin
  if dest = jsonb_array_length(q) then q := q || jsonb_build_array(item);
  else q := jsonb_insert(q, array[dest::text], item); end if;
  elsif kind = 'play' then
+ q := (select coalesce(jsonb_agg(v order by ord), '[]'::jsonb) from jsonb_array_elements(q) with ordinality a(v, ord)
+ where v->>'key' <> item->>'key' and v->>'key' is distinct from s->'current'->>'key');
+ q := jsonb_build_array(item) || q || case when s->'current' <> 'null'::jsonb and s->'current'->>'key' <> item->>'key' then jsonb_build_array(s->'current') else '[]'::jsonb end;
  s := s || jsonb_build_object('current', item, 'playing', true, 'position', 0, 'at', stamp);
  end if;
  elsif kind in ('skip', 'previous', 'restart') then
  if (p->>'key') is distinct from (s->'current'->>'key') then return r; end if;
  if p ? 'at' and (p->>'at') is distinct from (s->>'at') then return r; end if;
- select ord::integer - 1 into idx from jsonb_array_elements(q) with ordinality a(v, ord)
- where v->>'key' = s->'current'->>'key';
- dest := case when kind = 'restart' then 0 when kind = 'previous' then greatest(0, coalesce(idx, 0) - 1) else coalesce(idx, -1) + 1 end;
- item := q->dest;
- s := s || jsonb_build_object('current', coalesce(item, s->'current'), 'playing', item is not null, 'position', 0, 'at', stamp);
+ if kind = 'skip' and s->'current' <> 'null'::jsonb and jsonb_array_length(q) > 1 then
+ q := (select coalesce(jsonb_agg(v order by ord), '[]'::jsonb) from jsonb_array_elements(q) with ordinality a(v, ord) where v->>'key' <> s->'current'->>'key') || jsonb_build_array(s->'current');
+ elsif kind = 'previous' and s->'current' <> 'null'::jsonb and jsonb_array_length(q) > 1 then
+ q := jsonb_build_array(q->(jsonb_array_length(q)-1)) || (q - (jsonb_array_length(q)-1));
+ end if;
+ item := q->0;
+ s := s || jsonb_build_object('current', coalesce(item, s->'current'), 'playing', item is not null and not (kind = 'skip' and s->'current' <> 'null'::jsonb and jsonb_array_length(q) = 1), 'position', 0, 'at', stamp);
  elsif kind = 'transport' then
  if s->'current' = 'null'::jsonb or (p->>'key') is distinct from (s->'current'->>'key') then return r; end if;
  if jsonb_typeof(p->'playing') is distinct from 'boolean' or jsonb_typeof(p->'position') is distinct from 'number'
@@ -131,6 +136,8 @@ begin
  s := jsonb_set(s, '{messages}', (s->'messages') || jsonb_build_array(item));
  if jsonb_array_length(s->'messages') > 100 then s := jsonb_set(s, '{messages}', (s->'messages') - 0); end if;
  else raise exception 'Unknown command'; end if;
+ select ord::integer - 1 into idx from jsonb_array_elements(q) with ordinality a(v, ord) where v->>'key' = s->'current'->>'key';
+ if idx > 0 then q := jsonb_build_array(q->idx) || (q - idx); end if;
  s := jsonb_set(s, '{queue}', q);
  update rooms set state = s, version = version + 1,
  recent_commands = (array_prepend(receipt, recent_commands))[1:2048]

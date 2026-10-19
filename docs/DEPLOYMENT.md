@@ -75,6 +75,8 @@ Use the checks in [VERIFICATION.md](VERIFICATION.md) before calling the hosted s
 
 ## Upgrade existing rooms to six seats
 
+After the reusable-playlist migration, run `supabase/migrations/20261019_rotating_playlist.sql` to keep the active video first and rotate completed/skipped videos to the bottom. Existing entries and playback position are preserved. Refresh all open apps after deployment.
+
 For reusable playlists, also run `supabase/migrations/20261019_reusable_playlist.sql` before deploying the matching frontend. It preserves existing queue entries and puts any legacy current video at the beginning of the list. Previously consumed videos cannot be recovered. Reload open apps after this upgrade. The playlist persists until explicitly edited or the room expires after seven days.
 
 For an existing installation, run `supabase/migrations/20261019_six_member_rooms.sql` in the SQL editor before deploying the updated frontend. This replaces the admission function and increases the retry receipt window; it preserves room IDs, invitation codes, memberships, queues and messages. New installations can use the full `supabase/schema.sql`. Existing two-person rooms gain four available seats.

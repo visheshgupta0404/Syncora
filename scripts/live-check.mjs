@@ -155,6 +155,29 @@ try {
     position: 30,
   });
   assert.equal(r.state.position, 30);
+  const secondTrack = {
+    ...track,
+    key: "live-second",
+    title: "Second rotation test",
+  };
+  await edit(clients[0], "add", secondTrack);
+  r = await edit(clients[1], "skip", { key: track.key, at: r.state.at });
+  assert.deepEqual(
+    r.state.queue.map((v) => v.key),
+    ["live-second", "live-test"],
+  );
+  assert.equal(r.state.current.key, "live-second");
+  r = await edit(clients[0], "skip", {
+    key: r.state.current.key,
+    at: r.state.at,
+  });
+  assert.deepEqual(
+    r.state.queue.map((v) => v.key),
+    ["live-test", "live-second"],
+  );
+  console.log(
+    "PASS: shared rotation keeps current first and moves skipped tracks last",
+  );
   await Promise.all(
     clients.slice(0, 6).map((c, i) =>
       edit(c, "chat", {

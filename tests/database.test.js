@@ -49,6 +49,15 @@ after(async () => {
 });
 beforeEach(async () => {
   await pg.exec("reset role;truncate public.rooms,public.room_limits");
+  await pg.exec(
+    await readFile(
+      new URL(
+        "../supabase/migrations/20261019_rotating_playlist.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
   await identity();
 });
 test("six-member room, seventh-user rejection, outsider RLS and blocked writes", async () => {
@@ -151,7 +160,7 @@ test("six-seat migration preserves existing two-person rooms and their history",
     ),
   );
 });
-test("playlist retains tracks, follows keys through reorder, stops at end and can replay", async () => {
+test("playlist rotates finished or skipped tracks to the bottom and pins the current track", async () => {
   let r = await open();
   for (let i = 1; i <= 3; i++) r = await action(r, "add", track(i));
   r = await action(r, "play", { key: "2" });
@@ -166,16 +175,58 @@ test("playlist retains tracks, follows keys through reorder, stops at end and ca
   r = await action(r, "previous", { key: "1", at: r.state.at });
   assert.equal(r.state.current.key, "2");
   r = await action(r, "play", { key: "3" });
+  assert.deepEqual(
+    r.state.queue.map((v) => v.key),
+    ["3", "1", "2"],
+  );
   r = await action(r, "skip", { key: "3", at: r.state.at });
-  assert.equal(r.state.current.key, "3");
-  assert.equal(r.state.playing, false);
-  assert.equal(r.state.queue.length, 3);
-  r = await action(r, "restart", { key: "3", at: r.state.at });
-  assert.equal(r.state.current.key, "2");
+  assert.equal(r.state.current.key, "1");
+  assert.deepEqual(
+    r.state.queue.map((v) => v.key),
+    ["1", "2", "3"],
+  );
   assert.equal(r.state.playing, true);
-  r = await action(r, "remove", { key: "2" });
+  assert.equal(r.state.queue.length, 3);
+  r = await action(r, "restart", { key: "1", at: r.state.at });
+  assert.equal(r.state.current.key, "1");
+  assert.equal(r.state.playing, true);
+  r = await action(r, "remove", { key: "1" });
   assert.equal(r.state.current, null);
   assert.equal(r.state.queue.length, 2);
+});
+test("rotation migration preserves entries and moves existing current to top without duplicates", async () => {
+  let r = await open();
+  for (let i = 1; i <= 3; i++) r = await action(r, "add", track(i));
+  await pg.exec("reset role");
+  await pg.query(
+    "update rooms set state = state || jsonb_build_object('current', $1::jsonb) where id=$2",
+    [JSON.stringify(track(2)), r.id],
+  );
+  const migration = await readFile(
+    new URL(
+      "../supabase/migrations/20261019_rotating_playlist.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  await pg.exec(migration);
+  await pg.exec(migration);
+  await identity();
+  r = await open(r.code);
+  assert.deepEqual(
+    r.state.queue.map((v) => v.key),
+    ["2", "1", "3"],
+  );
+  r = await action(r, "transport", { key: "2", playing: false, position: 40 });
+  assert.deepEqual(
+    r.state.queue.map((v) => v.key),
+    ["2", "1", "3"],
+  );
+  r = await action(r, "skip", { key: "2", at: r.state.at });
+  assert.deepEqual(
+    r.state.queue.map((v) => v.key),
+    ["1", "3", "2"],
+  );
 });
 test("playlist migration preserves a legacy current video and is rerunnable", async () => {
   let r = await open();

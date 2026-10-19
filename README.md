@@ -7,7 +7,7 @@ A private listening room for up to six people, built with React, Vite, Supabase 
 - In-app YouTube search with thumbnails, channel names and Add to queue. Requires a server-only YouTube API key; see [search setup](docs/YOUTUBE-SEARCH.md).
 - Random private invitation codes and shareable links; database-enforced six-person capacity.
 - Official YouTube player with visible native controls; shared play/pause, seek slider, ±10 seconds, skip and manual resync.
-- Reusable shared playlist: add, remove, reorder, play immediately and play next; up to 100 videos. Videos remain listed while a shared pointer marks the current track. Previous/Next and Restart playlist preserve the list; playback stops at the end. Removing the current track stops playback. Room expiry still applies.
+- Reusable shared playlist: add, remove, reorder, play immediately and play next; up to 100 videos. The current video stays at the top and the second is marked Up next. Finishing, skipping or selecting another video moves the previous video to the bottom. Multiple videos cycle for reuse; a single-video playlist stops after finishing. Pause does not rotate the list. Previous reverses the rotation; Restart replays the top video. Removing the current track stops playback. Room expiry still applies.
 - Room chat, persistent listener name and latest 100 messages; messages carry server-assigned authors and timestamps.
 - Room recovery after reload, connection status, private presence, reconnect fetches, local offline detection and explicit seat release.
 - Server-clock offset measurement and drift correction. Track-scoped commands prevent stale playback events from advancing or rewinding another video.

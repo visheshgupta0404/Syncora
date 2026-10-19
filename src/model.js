@@ -58,22 +58,27 @@ export function reduce(state, { type, payload: p }, now = Date.now()) {
       Object.assign(s, { current: null, playing: false, position: 0, at: now });
     if (type === "move")
       s.queue.splice(Math.max(0, Math.min(p.to, s.queue.length)), 0, item);
-    if (type === "play")
+    if (type === "play") {
+      const old = s.current;
+      s.queue = s.queue.filter((v) => v.key !== item.key && v.key !== old?.key);
+      s.queue.unshift(item);
+      if (old && old.key !== item.key) s.queue.push(old);
       Object.assign(s, { current: item, playing: true, position: 0, at: now });
+    }
   } else if (["skip", "previous", "restart"].includes(type)) {
     if ((p?.key ?? null) !== (s.current?.key ?? null)) return s;
     if (p?.at !== undefined && p.at !== s.at) return s;
-    const index = s.queue.findIndex((v) => v.key === s.current?.key);
-    const next =
-      type === "restart"
-        ? 0
-        : type === "previous"
-          ? Math.max(0, index - 1)
-          : index + 1;
-    const item = s.queue[next];
+    const old = s.current;
+    if (type === "skip" && old && s.queue.length > 1) {
+      s.queue = s.queue.filter((v) => v.key !== old.key);
+      s.queue.push(old);
+    } else if (type === "previous" && old && s.queue.length > 1) {
+      s.queue.unshift(s.queue.pop());
+    }
+    const item = s.queue[0];
     Object.assign(s, {
       current: item || s.current,
-      playing: !!item,
+      playing: !!item && !(type === "skip" && old && s.queue.length === 1),
       position: 0,
       at: now,
     });
@@ -97,6 +102,10 @@ export function reduce(state, { type, payload: p }, now = Date.now()) {
       throw Error("Invalid message");
     s.messages = [...s.messages, { ...p, at: now }].slice(-100);
   } else throw Error("Unknown command");
+  if (s.current) {
+    const index = s.queue.findIndex((v) => v.key === s.current.key);
+    if (index > 0) s.queue.unshift(s.queue.splice(index, 1)[0]);
+  }
   return s;
 }
 export function targetPosition(s, now = Date.now()) {

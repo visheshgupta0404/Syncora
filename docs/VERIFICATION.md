@@ -1,5 +1,9 @@
 # Verification record
 
+## Rotating queue (October 19, 2026)
+
+All 22 automated tests and the build pass. Rotation checks cover the current video remaining first, skipping after partial playback, pause preserving order, selecting another video, Previous reversing rotation, and a rerunnable migration that preserves every entry. This supersedes the earlier multi-video stop-at-end behavior; playlists with two or more entries now cycle.
+
 ## Reusable playlist (October 19, 2026)
 
 All 21 automated tests and the production build pass. The hosted migration preserves legacy current videos and queue entries. The seven-guest live check passed persistent playlist playback, stopping at the last item, restart, stale-end rejection, private realtime, chat and seat limits. Unit/database tests also cover Previous, pointer identity through reordering, explicit current-track removal and rerunnable data migration. Previously consumed videos cannot be restored, and room expiry remains seven days.
