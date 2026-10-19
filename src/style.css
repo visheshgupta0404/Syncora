@@ -350,6 +350,17 @@ article {
 .track strong {
   min-width: 0;
 }
+.queue .current-track {
+  background: #bec9ff0d;
+  border-left: 2px solid #bec9ff;
+  padding-inline: 10px;
+}
+.now-playing {
+  display: block;
+  color: #bec9ff;
+  font-size: 10px;
+  margin-bottom: 5px;
+}
 .number {
   font-size: 11px;
   color: #74809b;

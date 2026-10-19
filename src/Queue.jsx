@@ -1,9 +1,14 @@
-export default function Queue({ queue, dispatch, disabled }) {
+export default function Queue({ queue, currentKey, dispatch, disabled }) {
+  const currentIndex = queue.findIndex((v) => v.key === currentKey);
   return (
     <div className="queue">
       {queue.length ? (
         queue.map((v, i) => (
-          <article key={v.key}>
+          <article
+            key={v.key}
+            className={v.key === currentKey ? "current-track" : ""}
+            aria-current={v.key === currentKey ? "true" : undefined}
+          >
             <div className="track">
               <span className="number">{String(i + 1).padStart(2, "0")}</span>
               <img
@@ -15,7 +20,12 @@ export default function Queue({ queue, dispatch, disabled }) {
                 loading="lazy"
                 referrerPolicy="no-referrer"
               />
-              <strong>{v.title}</strong>
+              <strong>
+                {v.key === currentKey ? (
+                  <small className="now-playing">▶ Now playing</small>
+                ) : null}
+                {v.title}
+              </strong>
             </div>
             <div className="rowactions">
               <button
@@ -27,9 +37,20 @@ export default function Queue({ queue, dispatch, disabled }) {
                 Play
               </button>
               <button
-                disabled={disabled || i === 0}
+                disabled={
+                  disabled || v.key === currentKey || i === currentIndex + 1
+                }
                 onClick={() =>
-                  dispatch({ type: "move", payload: { key: v.key, to: 0 } })
+                  dispatch({
+                    type: "move",
+                    payload: {
+                      key: v.key,
+                      to:
+                        currentIndex < 0
+                          ? 0
+                          : currentIndex + (i > currentIndex ? 1 : 0),
+                    },
+                  })
                 }
               >
                 Play next

@@ -148,7 +148,10 @@ export default function Player({
                 suppress();
                 current.onAction({
                   type: "skip",
-                  payload: { key: current.state.current.key },
+                  payload: {
+                    key: current.state.current.key,
+                    at: current.state.at,
+                  },
                 });
               } else if (
                 [1, 2].includes(e.data) &&
@@ -379,10 +382,32 @@ export default function Player({
         <button
           disabled={(!key && !state.queue.length) || disabled}
           onClick={() =>
-            onAction({ type: "skip", payload: { key: key || null } })
+            onAction({
+              type: "skip",
+              payload: { key: key || null, at: state.at },
+            })
           }
         >
-          {key ? "Skip ↦" : "Start queue ▶"}
+          {key ? "Next ↦" : "Start playlist ▶"}
+        </button>
+        <button
+          disabled={!key || disabled}
+          onClick={() =>
+            onAction({ type: "previous", payload: { key, at: state.at } })
+          }
+        >
+          ↤ Previous
+        </button>
+        <button
+          disabled={!state.queue.length || disabled}
+          onClick={() =>
+            onAction({
+              type: "restart",
+              payload: { key: key || null, at: state.at },
+            })
+          }
+        >
+          Restart playlist
         </button>
         <button
           disabled={!ready || !key}

@@ -295,6 +295,7 @@ function App() {
               {tab === "queue" ? (
                 <Queue
                   queue={state.queue}
+                  currentKey={state.current?.key}
                   dispatch={dispatch}
                   notify={setNotice}
                   disabled={disabled}

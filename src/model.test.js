@@ -48,7 +48,8 @@ test("queue edits and play-next preserve playback; stale commands cannot resurre
   s = reduce(s, { type: "skip", payload: { key: "2" } });
   assert.equal(s.current.key, "1");
   s = reduce(s, { type: "skip", payload: { key: "1" } });
-  assert.equal(s.current, null);
+  assert.equal(s.current.key, "1");
+  assert.equal(s.queue.length, 2);
   assert.equal(s.playing, false);
 });
 test("transport rejects old-track events and invalid positions", () => {

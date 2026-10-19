@@ -82,7 +82,7 @@ begin
  if action is null or jsonb_typeof(action) <> 'object' or pg_column_size(action) > 4096
  then raise exception 'Invalid command'; end if;
  kind := action->>'type'; p := action->'payload'; s := r.state; q := s->'queue';
- stamp := floor(extract(epoch from clock_timestamp()) * 1000);
+ stamp := greatest(floor(extract(epoch from clock_timestamp()) * 1000)::bigint, coalesce((s->>'at')::bigint, 0) + 1);
  if kind = 'add' then
  if jsonb_typeof(p) is distinct from 'object' or (p->>'id') is null
  or (p->>'id') !~ '^[A-Za-z0-9_-]{11}$' or (p->>'key') is null
@@ -96,7 +96,10 @@ begin
  select ord::integer - 1, v into idx, item from jsonb_array_elements(q) with ordinality a(v, ord)
  where v->>'key' = p->>'key';
  if idx is null then return r; end if;
- q := q - idx;
+ if kind <> 'play' then q := q - idx; end if;
+ if kind = 'remove' and s->'current'->>'key' = item->>'key' then
+ s := s || jsonb_build_object('current', null, 'playing', false, 'position', 0, 'at', stamp);
+ end if;
  if kind = 'move' then
  if jsonb_typeof(p->'to') is distinct from 'number' or (p->>'to') !~ '^\d{1,3}$'
  then raise exception 'Invalid queue position'; end if;
@@ -106,10 +109,14 @@ begin
  elsif kind = 'play' then
  s := s || jsonb_build_object('current', item, 'playing', true, 'position', 0, 'at', stamp);
  end if;
- elsif kind = 'skip' then
+ elsif kind in ('skip', 'previous', 'restart') then
  if (p->>'key') is distinct from (s->'current'->>'key') then return r; end if;
- s := s || jsonb_build_object('current', q->0, 'playing', jsonb_array_length(q) > 0, 'position', 0, 'at', stamp);
- q := q - 0;
+ if p ? 'at' and (p->>'at') is distinct from (s->>'at') then return r; end if;
+ select ord::integer - 1 into idx from jsonb_array_elements(q) with ordinality a(v, ord)
+ where v->>'key' = s->'current'->>'key';
+ dest := case when kind = 'restart' then 0 when kind = 'previous' then greatest(0, coalesce(idx, 0) - 1) else coalesce(idx, -1) + 1 end;
+ item := q->dest;
+ s := s || jsonb_build_object('current', coalesce(item, s->'current'), 'playing', item is not null, 'position', 0, 'at', stamp);
  elsif kind = 'transport' then
  if s->'current' = 'null'::jsonb or (p->>'key') is distinct from (s->'current'->>'key') then return r; end if;
  if jsonb_typeof(p->'playing') is distinct from 'boolean' or jsonb_typeof(p->'position') is distinct from 'number'

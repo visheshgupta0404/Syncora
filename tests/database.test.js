@@ -140,6 +140,67 @@ test("six-seat migration preserves existing two-person rooms and their history",
   }
   await identity(users[6]);
   await assert.rejects(open(r.code), /maximum 6 people/);
+  await pg.exec("reset role");
+  await pg.exec(
+    await readFile(
+      new URL(
+        "../supabase/migrations/20261019_reusable_playlist.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+});
+test("playlist retains tracks, follows keys through reorder, stops at end and can replay", async () => {
+  let r = await open();
+  for (let i = 1; i <= 3; i++) r = await action(r, "add", track(i));
+  r = await action(r, "play", { key: "2" });
+  assert.equal(r.state.queue.length, 3);
+  r = await action(r, "move", { key: "2", to: 0 });
+  assert.equal(r.state.current.key, "2");
+  const stale = { key: "2", at: r.state.at };
+  r = await action(r, "skip", stale);
+  assert.equal(r.state.current.key, "1");
+  r = await action(r, "skip", stale);
+  assert.equal(r.state.current.key, "1");
+  r = await action(r, "previous", { key: "1", at: r.state.at });
+  assert.equal(r.state.current.key, "2");
+  r = await action(r, "play", { key: "3" });
+  r = await action(r, "skip", { key: "3", at: r.state.at });
+  assert.equal(r.state.current.key, "3");
+  assert.equal(r.state.playing, false);
+  assert.equal(r.state.queue.length, 3);
+  r = await action(r, "restart", { key: "3", at: r.state.at });
+  assert.equal(r.state.current.key, "2");
+  assert.equal(r.state.playing, true);
+  r = await action(r, "remove", { key: "2" });
+  assert.equal(r.state.current, null);
+  assert.equal(r.state.queue.length, 2);
+});
+test("playlist migration preserves a legacy current video and is rerunnable", async () => {
+  let r = await open();
+  r = await action(r, "add", track(2));
+  await pg.exec("reset role");
+  await pg.query(
+    "update rooms set state = state || jsonb_build_object('current', $1::jsonb) where id=$2",
+    [JSON.stringify(track(1)), r.id],
+  );
+  const migration = await readFile(
+    new URL(
+      "../supabase/migrations/20261019_reusable_playlist.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  await pg.exec(migration);
+  await pg.exec(migration);
+  await identity();
+  r = await open(r.code);
+  assert.deepEqual(
+    r.state.queue.map((v) => v.key),
+    ["1", "2"],
+  );
+  assert.equal(r.state.current.key, "1");
 });
 test("server validates payloads and stamps authors and timestamps", async () => {
   let r = await open();

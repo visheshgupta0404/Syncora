@@ -137,6 +137,18 @@ try {
   );
   r = await edit(clients[1], "play", { key: track.key });
   assert.equal(r.state.current.key, track.key);
+  assert.equal(r.state.queue.length, 1);
+  const ended = { key: track.key, at: r.state.at };
+  r = await edit(clients[0], "skip", ended);
+  assert.equal(r.state.playing, false);
+  assert.equal(r.state.queue.length, 1);
+  r = await edit(clients[1], "restart", { key: track.key, at: r.state.at });
+  assert.equal(r.state.playing, true);
+  r = await edit(clients[0], "skip", ended);
+  assert.equal(r.state.playing, true);
+  console.log(
+    "PASS: persistent playlist, stop at end, restart and stale-end rejection",
+  );
   r = await edit(clients[0], "transport", {
     key: track.key,
     playing: false,
@@ -144,14 +156,12 @@ try {
   });
   assert.equal(r.state.position, 30);
   await Promise.all(
-    clients
-      .slice(0, 6)
-      .map((c, i) =>
-        edit(c, "chat", {
-          name: `Listener ${i + 1}`,
-          text: `Hosted test ${i + 1}`,
-        }),
-      ),
+    clients.slice(0, 6).map((c, i) =>
+      edit(c, "chat", {
+        name: `Listener ${i + 1}`,
+        text: `Hosted test ${i + 1}`,
+      }),
+    ),
   );
   const read = await clients[1]
     .from("rooms")

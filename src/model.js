@@ -36,6 +36,7 @@ export const initialState = () => ({
 // Local demo mirrors the database's authoritative command semantics.
 export function reduce(state, { type, payload: p }, now = Date.now()) {
   const s = structuredClone(state);
+  now = Math.max(now, s.at + 1);
   if (type === "add") {
     if (s.queue.length >= 100) throw Error("Queue is full");
     if (
@@ -51,15 +52,31 @@ export function reduce(state, { type, payload: p }, now = Date.now()) {
   } else if (["remove", "move", "play"].includes(type)) {
     const i = s.queue.findIndex((v) => v.key === p?.key);
     if (i < 0) return s;
-    const [item] = s.queue.splice(i, 1);
+    const item = s.queue[i];
+    if (type !== "play") s.queue.splice(i, 1);
+    if (type === "remove" && s.current?.key === item.key)
+      Object.assign(s, { current: null, playing: false, position: 0, at: now });
     if (type === "move")
       s.queue.splice(Math.max(0, Math.min(p.to, s.queue.length)), 0, item);
     if (type === "play")
       Object.assign(s, { current: item, playing: true, position: 0, at: now });
-  } else if (type === "skip") {
+  } else if (["skip", "previous", "restart"].includes(type)) {
     if ((p?.key ?? null) !== (s.current?.key ?? null)) return s;
-    s.current = s.queue.shift() || null;
-    Object.assign(s, { playing: !!s.current, position: 0, at: now });
+    if (p?.at !== undefined && p.at !== s.at) return s;
+    const index = s.queue.findIndex((v) => v.key === s.current?.key);
+    const next =
+      type === "restart"
+        ? 0
+        : type === "previous"
+          ? Math.max(0, index - 1)
+          : index + 1;
+    const item = s.queue[next];
+    Object.assign(s, {
+      current: item || s.current,
+      playing: !!item,
+      position: 0,
+      at: now,
+    });
   } else if (type === "transport") {
     if (!s.current || p?.key !== s.current.key) return s;
     if (

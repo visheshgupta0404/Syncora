@@ -1,5 +1,9 @@
 # Verification record
 
+## Reusable playlist (October 19, 2026)
+
+All 21 automated tests and the production build pass. The hosted migration preserves legacy current videos and queue entries. The seven-guest live check passed persistent playlist playback, stopping at the last item, restart, stale-end rejection, private realtime, chat and seat limits. Unit/database tests also cover Previous, pointer identity through reordering, explicit current-track removal and rerunnable data migration. Previously consumed videos cannot be restored, and room expiry remains seven days.
+
 ## YouTube search (October 19, 2026)
 
 All 19 automated tests and the production build pass. Search endpoint tests cover guest/room authorization, embeddable-video filters, result filtering, quota and upstream failures, and keeping the API key out of responses. The dedicated Syncora Google project has YouTube Data API v3 enabled with a key restricted to that API, stored as an encrypted Cloudflare production secret. The deployed app returned eight real search results; adding a result saved it in the shared queue and the item remained after reload. Actual Android/iPhone hardware testing remains outstanding.
