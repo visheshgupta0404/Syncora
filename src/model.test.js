@@ -130,4 +130,10 @@ test("playback correction distinguishes a seek, drift, buffering and blocked pla
   assert.equal(playbackDecision({ ...base, playerState: 3 }).type, "wait");
   assert.equal(playbackDecision({ ...base, suppressed: true }).type, "wait");
   assert.equal(playbackDecision({ ...base, position: 11 }).type, "wait");
+  assert.equal(
+    playbackDecision({ ...base, state: { ...state, at: 4000 } }).type,
+    "wait",
+  );
+  assert.equal(targetPosition({ ...state, at: 4000 }, 2000), 10);
+  assert.equal(playbackDecision({ ...base, position: 12.2 }).type, "correct");
 });

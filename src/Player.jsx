@@ -54,21 +54,40 @@ export default function Player({
     [draft, setDraft] = useState(null),
     [buffering, setBuffering] = useState(false);
   const key = state.current?.key;
+  const scheduled = Date.now() + offset < state.at;
   function suppress() {
     suppressed.current = Date.now() + 1000;
     sample.current = null;
     nativeSeek.current = null;
   }
-  function transport(playing, position) {
+  function transport(playing, position, seek = false) {
     const current = latest.current;
-    if (current.disabled || !current.state.current) return;
+    if (
+      current.disabled ||
+      !current.state.current ||
+      Date.now() + current.offset < current.state.at
+    )
+      return;
     suppress();
     lastCommand.current = Date.now();
+    // Restore native local changes until the shared execution time arrives.
+    const p = player.current;
+    if (p && Date.now() + current.offset >= current.state.at) {
+      const sharedPosition = targetPosition(
+        current.state,
+        Date.now() + current.offset,
+      );
+      if (Math.abs(p.getCurrentTime() - sharedPosition) > 1.5)
+        p.seekTo(sharedPosition, true);
+      if (current.state.playing) p.playVideo();
+      else p.pauseVideo();
+    }
     current.onAction({
       type: "transport",
       payload: {
         key: current.state.current.key,
         playing,
+        seek,
         position: Math.min(604800, Math.max(0, position)),
       },
     });
@@ -141,7 +160,8 @@ export default function Player({
               if (
                 Date.now() < suppressed.current ||
                 !current.state.current ||
-                current.disabled
+                current.disabled ||
+                Date.now() + current.offset < current.state.at
               )
                 return;
               if (e.data === 0) {
@@ -157,7 +177,7 @@ export default function Player({
                 [1, 2].includes(e.data) &&
                 nativeSeek.current?.key === current.state.current.key
               ) {
-                transport(e.data === 1, player.current.getCurrentTime());
+                transport(e.data === 1, player.current.getCurrentTime(), true);
               } else if (
                 [1, 2].includes(e.data) &&
                 (e.data === 1) !== current.state.playing
@@ -190,20 +210,29 @@ export default function Player({
       setDuration(0);
       return;
     }
-    const position = targetPosition(state, Date.now() + offset);
+    const wait = Math.max(0, state.at - (Date.now() + offset));
     if (loaded.current !== key) {
       loaded.current = key;
       blockedRef.current = false;
       setBlocked(false);
-      if (state.playing)
-        p.loadVideoById({ videoId: state.current.id, startSeconds: position });
-      else
-        p.cueVideoById({ videoId: state.current.id, startSeconds: position });
-    } else {
+      p.cueVideoById({
+        videoId: state.current.id,
+        startSeconds: state.position,
+      });
+    }
+    const apply = () => {
+      suppress();
+      const position = targetPosition(state, Date.now() + offset);
       if (Math.abs(p.getCurrentTime() - position) > 1.5)
         p.seekTo(position, true);
       if (state.playing && !blockedRef.current) p.playVideo();
       else if (!state.playing) p.pauseVideo();
+    };
+    if (!wait) apply();
+    else {
+      suppressed.current = Date.now() + wait + 1000;
+      const timer = setTimeout(apply, wait);
+      return () => clearTimeout(timer);
     }
   }, [key, state.playing, state.position, state.at, ready, offset]);
   useEffect(() => {
@@ -233,7 +262,7 @@ export default function Player({
         decision.type === "publish" &&
         Date.now() - lastCommand.current > 1000
       )
-        transport(decision.playing, decision.position);
+        transport(decision.playing, decision.position, decision.seek || false);
       else if (decision.type === "correct") {
         suppress();
         p.seekTo(decision.position, true);
@@ -244,7 +273,11 @@ export default function Player({
     const visible = () => {
       if (!document.hidden) {
         sample.current = null;
-        if (latest.current.state.current && !blockedRef.current) {
+        if (
+          latest.current.state.current &&
+          !blockedRef.current &&
+          Date.now() + latest.current.offset >= latest.current.state.at
+        ) {
           suppress();
           player.current.seekTo(
             targetPosition(
@@ -267,8 +300,7 @@ export default function Player({
     setDraft(null);
     if (!Number.isFinite(position)) return;
     suppress();
-    player.current?.seekTo(position, true);
-    transport(state.playing, position);
+    transport(state.playing, position, true);
   };
   async function fullScreen() {
     try {
@@ -323,7 +355,7 @@ export default function Player({
           max={duration || 1}
           step="1"
           value={Math.min(draft ?? time, duration || 1)}
-          disabled={!ready || !key || disabled || !duration}
+          disabled={!ready || !key || disabled || scheduled || !duration}
           onChange={(e) => setDraft(Number(e.target.value))}
           onPointerUp={(e) => seek(e.currentTarget.value)}
           onKeyUp={(e) => {
@@ -343,23 +375,22 @@ export default function Player({
         <span>
           {formatTime(draft ?? time)} / {formatTime(duration)}
           {buffering ? " · Buffering…" : ""}
+          {Date.now() + offset < state.at ? " · Synchronizing…" : ""}
         </span>
       </div>
       <div className="transport">
         <button
-          disabled={!key || !ready || disabled}
+          disabled={!key || !ready || disabled || scheduled}
           onClick={() => {
             const p = player.current;
             suppress();
-            if (state.playing) p.pauseVideo();
-            else p.playVideo();
             transport(!state.playing, p.getCurrentTime());
           }}
         >
           {state.playing ? "Ⅱ Pause" : "▶ Play"}
         </button>
         <button
-          disabled={!key || !ready || disabled}
+          disabled={!key || !ready || disabled || scheduled}
           onClick={() =>
             seek(Math.max(0, player.current.getCurrentTime() - 10))
           }
@@ -367,7 +398,7 @@ export default function Player({
           −10s
         </button>
         <button
-          disabled={!key || !ready || disabled}
+          disabled={!key || !ready || disabled || scheduled}
           onClick={() =>
             seek(
               Math.min(
@@ -380,7 +411,7 @@ export default function Player({
           +10s
         </button>
         <button
-          disabled={(!key && !state.queue.length) || disabled}
+          disabled={(!key && !state.queue.length) || disabled || scheduled}
           onClick={() =>
             onAction({
               type: "skip",
@@ -391,7 +422,7 @@ export default function Player({
           {key ? "Next ↦" : "Start playlist ▶"}
         </button>
         <button
-          disabled={!key || disabled}
+          disabled={!key || disabled || scheduled}
           onClick={() =>
             onAction({ type: "previous", payload: { key, at: state.at } })
           }
@@ -399,7 +430,7 @@ export default function Player({
           ↤ Previous
         </button>
         <button
-          disabled={!state.queue.length || disabled}
+          disabled={!state.queue.length || disabled || scheduled}
           onClick={() =>
             onAction({
               type: "restart",
@@ -410,7 +441,7 @@ export default function Player({
           Restart playlist
         </button>
         <button
-          disabled={!ready || !key}
+          disabled={!ready || !key || scheduled}
           onClick={() => {
             suppress();
             const pos = targetPosition(state, Date.now() + offset);
@@ -432,6 +463,10 @@ export default function Player({
           PiP ⧉
         </button>
       </div>
+      <small className="muted">
+        Shared controls use a 1.5-second sync window, including video changes.
+        Buffering may still cause drift.
+      </small>
     </>
   );
 }

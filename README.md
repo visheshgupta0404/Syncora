@@ -53,6 +53,8 @@ Commands are applied under a database row lock, with 2048 recent command receipt
 
 ## YouTube and iPhone limitations
 
+Playback commands and video transitions use a shared server-clock deadline 1.5 seconds ahead. Use Syncora's controls for scheduled play/pause/seek; new videos are cued before their start deadline. Late devices catch up to the shared timeline, with correction after drift exceeds one second. This is closer synchronization, not a zero-millisecond guarantee: YouTube buffering, ads, autoplay restrictions and backgrounded devices can still diverge.
+
 Uses the official IFrame Player API. Syncora does not download or extract media, hide ads/branding, cover player controls, or bypass embedding restrictions. Loading the player/video contacts YouTube. Labels are user-entered; no YouTube Data API key is needed.
 
 Each iPhone may require a direct tap to enable sound. Keep both apps visible: screen lock, app switching, ads and buffering can disrupt playback or synchronization. Playback is approximate, not sample-accurate; **Resync** catches a device up. There is no background-audio guarantee.

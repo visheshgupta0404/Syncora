@@ -135,7 +135,9 @@ try {
   console.log(
     "PASS: private realtime, presence, change delivery and retry deduplication",
   );
+  const beforePlay = await rpc(clients[0], "room_clock");
   r = await edit(clients[1], "play", { key: track.key });
+  assert.ok(r.state.at >= beforePlay + 1400);
   assert.equal(r.state.current.key, track.key);
   assert.equal(r.state.queue.length, 1);
   const ended = { key: track.key, at: r.state.at };
@@ -153,6 +155,7 @@ try {
     key: track.key,
     playing: false,
     position: 30,
+    seek: true,
   });
   assert.equal(r.state.position, 30);
   const secondTrack = {
@@ -167,6 +170,7 @@ try {
     ["live-second", "live-test"],
   );
   assert.equal(r.state.current.key, "live-second");
+  assert.ok(r.state.at > beforePlay + 1400);
   r = await edit(clients[0], "skip", {
     key: r.state.current.key,
     at: r.state.at,

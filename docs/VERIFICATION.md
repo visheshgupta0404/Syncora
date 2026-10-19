@@ -1,5 +1,9 @@
 # Verification record
 
+## Scheduled synchronization (October 19, 2026)
+
+Playback and track-change timestamps now schedule execution 1500ms ahead on the measured server clock. Tests cover future deadlines, pause-position projection, exact scheduled seeking, transition deadlines, waiting before deadlines and tighter drift correction. Real physical-phone timing still needs measurement; no zero-gap claim is made.
+
 ## Rotating queue (October 19, 2026)
 
 All 22 automated tests and the build pass. Rotation checks cover the current video remaining first, skipping after partial playback, pause preserving order, selecting another video, Previous reversing rotation, and a rerunnable migration that preserves every entry. This supersedes the earlier multi-video stop-at-end behavior; playlists with two or more entries now cycle.

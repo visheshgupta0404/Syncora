@@ -1,4 +1,5 @@
 export const ROOM_CAPACITY = 6;
+export const SYNC_DELAY_MS = 1500;
 
 export function videoId(input) {
   if (/^[\w-]{11}$/.test(input)) return input;
@@ -36,6 +37,7 @@ export const initialState = () => ({
 // Local demo mirrors the database's authoritative command semantics.
 export function reduce(state, { type, payload: p }, now = Date.now()) {
   const s = structuredClone(state);
+  const effectiveAt = Math.max(now + SYNC_DELAY_MS, s.at + 1);
   now = Math.max(now, s.at + 1);
   if (type === "add") {
     if (s.queue.length >= 100) throw Error("Queue is full");
@@ -63,7 +65,12 @@ export function reduce(state, { type, payload: p }, now = Date.now()) {
       s.queue = s.queue.filter((v) => v.key !== item.key && v.key !== old?.key);
       s.queue.unshift(item);
       if (old && old.key !== item.key) s.queue.push(old);
-      Object.assign(s, { current: item, playing: true, position: 0, at: now });
+      Object.assign(s, {
+        current: item,
+        playing: true,
+        position: 0,
+        at: effectiveAt,
+      });
     }
   } else if (["skip", "previous", "restart"].includes(type)) {
     if ((p?.key ?? null) !== (s.current?.key ?? null)) return s;
@@ -80,7 +87,7 @@ export function reduce(state, { type, payload: p }, now = Date.now()) {
       current: item || s.current,
       playing: !!item && !(type === "skip" && old && s.queue.length === 1),
       position: 0,
-      at: now,
+      at: effectiveAt,
     });
   } else if (type === "transport") {
     if (!s.current || p?.key !== s.current.key) return s;
@@ -91,7 +98,14 @@ export function reduce(state, { type, payload: p }, now = Date.now()) {
       typeof p.playing !== "boolean"
     )
       throw Error("Invalid playback command");
-    Object.assign(s, { playing: p.playing, position: p.position, at: now });
+    Object.assign(s, {
+      playing: p.playing,
+      position: Math.min(
+        604800,
+        p.position + (!p.seek && s.playing ? (effectiveAt - now) / 1000 : 0),
+      ),
+      at: effectiveAt,
+    });
   } else if (type === "chat") {
     if (
       !p?.text?.trim() ||

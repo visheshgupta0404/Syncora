@@ -83,6 +83,9 @@ begin
  then raise exception 'Invalid command'; end if;
  kind := action->>'type'; p := action->'payload'; s := r.state; q := s->'queue';
  stamp := greatest(floor(extract(epoch from clock_timestamp()) * 1000)::bigint, coalesce((s->>'at')::bigint, 0) + 1);
+ if kind in ('play', 'skip', 'previous', 'restart', 'transport') then
+ stamp := greatest(floor(extract(epoch from clock_timestamp()) * 1000)::bigint + 1500, coalesce((s->>'at')::bigint, 0) + 1);
+ end if;
  if kind = 'add' then
  if jsonb_typeof(p) is distinct from 'object' or (p->>'id') is null
  or (p->>'id') !~ '^[A-Za-z0-9_-]{11}$' or (p->>'key') is null
@@ -126,7 +129,7 @@ begin
  if s->'current' = 'null'::jsonb or (p->>'key') is distinct from (s->'current'->>'key') then return r; end if;
  if jsonb_typeof(p->'playing') is distinct from 'boolean' or jsonb_typeof(p->'position') is distinct from 'number'
  or (p->>'position')::numeric not between 0 and 604800 then raise exception 'Invalid playback command'; end if;
- s := s || jsonb_build_object('playing', p->'playing', 'position', p->'position', 'at', stamp);
+ s := s || jsonb_build_object('playing', p->'playing', 'position', least(604800, (p->>'position')::numeric + case when p->'seek' = 'true'::jsonb or s->'playing' <> 'true'::jsonb then 0 else greatest(0, stamp - floor(extract(epoch from clock_timestamp()) * 1000)) / 1000.0 end), 'at', stamp);
  elsif kind = 'chat' then
  perform check_room_limit('chat', 30);
  if jsonb_typeof(p) is distinct from 'object' or (p->>'text') is null

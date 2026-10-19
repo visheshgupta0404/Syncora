@@ -52,7 +52,7 @@ beforeEach(async () => {
   await pg.exec(
     await readFile(
       new URL(
-        "../supabase/migrations/20261019_rotating_playlist.sql",
+        "../supabase/migrations/20261019_scheduled_playback.sql",
         import.meta.url,
       ),
       "utf8",
@@ -81,6 +81,32 @@ test("six-member room, seventh-user rejection, outsider RLS and blocked writes",
   await identity(null);
   await assert.rejects(open(), /Sign in first/);
 });
+test("playback commands and automatic transitions receive shared future deadlines", async () => {
+  let r = await open();
+  r = await action(r, "add", track(1));
+  r = await action(r, "add", track(2));
+  const clock = Number(
+    (await pg.query("select public.room_clock() as now")).rows[0].now,
+  );
+  r = await action(r, "play", { key: "1" });
+  assert.ok(r.state.at >= clock + 1400);
+  const first = r.state.at;
+  r = await action(r, "transport", { key: "1", playing: false, position: 20 });
+  assert.ok(r.state.at > first);
+  assert.ok(r.state.position >= 21.4 && r.state.position <= 21.7);
+  r = await action(r, "transport", {
+    key: "1",
+    playing: true,
+    position: 40,
+    seek: true,
+  });
+  assert.equal(r.state.position, 40);
+  const beforeNext = r.state.at;
+  r = await action(r, "skip", { key: "1", at: r.state.at });
+  assert.equal(r.state.current.key, "2");
+  assert.ok(r.state.at > beforeNext);
+  assert.equal(r.state.position, 0);
+});
 test("atomic commands, retries, stale skip and no resurrection", async () => {
   let r = await open();
   const command = randomUUID();
@@ -95,7 +121,12 @@ test("atomic commands, retries, stale skip and no resurrection", async () => {
   r = await action(r, "skip", { key: "2" });
   r = await action(r, "skip", { key: "2" });
   assert.equal(r.state.current.key, "1");
-  r = await action(r, "transport", { key: "1", playing: false, position: 42 });
+  r = await action(r, "transport", {
+    key: "1",
+    playing: false,
+    position: 42,
+    seek: true,
+  });
   assert.equal(r.state.position, 42);
   assert.equal(r.state.playing, false);
   r = await action(r, "transport", { key: "old", playing: true, position: 0 });
