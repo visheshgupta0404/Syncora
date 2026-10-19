@@ -391,24 +391,9 @@ export default function Player({
         </button>
         <button
           disabled={!key || !ready || disabled || scheduled}
-          onClick={() =>
-            seek(Math.max(0, player.current.getCurrentTime() - 10))
-          }
+          onClick={() => seek(0)}
         >
-          −10s
-        </button>
-        <button
-          disabled={!key || !ready || disabled || scheduled}
-          onClick={() =>
-            seek(
-              Math.min(
-                duration || 604800,
-                player.current.getCurrentTime() + 10,
-              ),
-            )
-          }
-        >
-          +10s
+          ↺ Restart video
         </button>
         <button
           disabled={(!key && !state.queue.length) || disabled || scheduled}
@@ -453,15 +438,6 @@ export default function Player({
           Resync ↔
         </button>
         <button onClick={fullScreen}>⛶ Full screen</button>
-        <button
-          onClick={() =>
-            notify(
-              "Experimental PiP: use a native browser or YouTube player PiP option if offered. Syncora cannot force PiP inside YouTube’s cross-origin iframe. Background playback is not guaranteed.",
-            )
-          }
-        >
-          PiP ⧉
-        </button>
       </div>
       <small className="muted">
         Shared controls use a 1.5-second sync window, including video changes.
