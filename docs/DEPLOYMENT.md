@@ -1,6 +1,8 @@
 # Free deployment
 
-Cloudflare Pages project `syncora` serves [syncora-a6v.pages.dev](https://syncora-a6v.pages.dev/) and automatically builds commits to `main`. Production settings are `npm run build`, output `dist`, Node 24, and the public Supabase URL/publishable key. These must be configured in Pages; serving the repository root instead of `dist` produces a blank app.
+Cloudflare Pages project `syncoramoments` serves [syncoramoments.pages.dev](https://syncoramoments.pages.dev/) and automatically builds commits to `main`. The previous project `syncora` still serves `syncora-a6v.pages.dev`, preserving old invitations. Both use the same Supabase project. Production settings are `npm run build`, output `dist`, Node 24, and the public Supabase URL/publishable key, with `YOUTUBE_API_KEY` stored as a secret. These must be configured in Pages; serving the repository root instead of `dist` produces a blank app.
+
+Browser guest sessions, saved names and installed PWAs belong to each origin. Open the new address and join using the existing room code or create a room there. Reinstall from the new address if desired; old installations continue to use the old address. New invitation links use whichever address the app was opened on.
 
 The owner's free Supabase project is configured in Mumbai with the application schema and anonymous sign-in enabled. Local connection settings are saved only in ignored `.env.local`. Hosted API/realtime checks have passed. Optional CAPTCHA setup and physical-phone acceptance remain. The steps below document how to reproduce the setup.
 

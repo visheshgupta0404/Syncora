@@ -33,7 +33,7 @@ npm run preview
 
 ## Connect and deploy
 
-Production: [syncora-a6v.pages.dev](https://syncora-a6v.pages.dev/).
+Production: [syncoramoments.pages.dev](https://syncoramoments.pages.dev/). The previous `syncora-a6v.pages.dev` address remains available.
 
 Cloudflare Pages is connected to this repository's `main` branch with automatic deployments, build command `npm run build`, output directory `dist`, and Node 24. Public Supabase connection settings are configured in Pages. The owner's free Supabase project is configured in Mumbai; its schema and anonymous Auth are enabled, and hosted room/realtime checks have passed. Local connection settings stay in ignored `.env.local`; no keys are committed. See [the deployment guide](docs/DEPLOYMENT.md) to reproduce the setup.
 
