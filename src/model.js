@@ -130,14 +130,22 @@ export function targetPosition(s, now = Date.now()) {
 }
 export function parseInvite(value) {
   const text = value.trim();
+  const normalize = (code) => {
+    const compact = code.replace(/-/g, "").toLowerCase();
+    return /^(?:[a-f0-9]{10}|[a-f0-9]{32})$/.test(compact) ? compact : null;
+  };
   try {
-    return (
-      new URL(text).hash.match(/^#room=([a-f0-9]{32})$/i)?.[1]?.toLowerCase() ||
-      null
+    return normalize(
+      new URL(text).hash.match(/^#room=([a-f0-9-]+)$/i)?.[1] || "",
     );
   } catch {
-    return /^[a-f0-9]{32}$/i.test(text) ? text.toLowerCase() : null;
+    return normalize(text);
   }
+}
+export function formatRoomCode(code = "") {
+  return code.length === 10
+    ? `${code.slice(0, 5)}-${code.slice(5)}`.toUpperCase()
+    : code;
 }
 export function formatTime(seconds) {
   const n = Math.max(0, Math.floor(seconds || 0));

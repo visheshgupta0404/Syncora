@@ -43,7 +43,7 @@ Never put a service-role key, secret key, database password or Turnstile secret 
 
 ## Room behavior and privacy
 
-Invitation codes use random UUIDs without separators. Up to six authenticated identities may claim a room, including its creator. Everyone has equal control; display names are labels, not verified identities. Invitation links use URL fragments, and the fragment is removed before mounting the YouTube player so its widget does not receive the invitation in the page URL.
+Room codes use ten random hexadecimal characters, displayed in two groups of five. Legacy invitations remain valid after shortening existing codes. Up to six authenticated identities may claim a room, including its creator. Everyone has equal control; display names are labels, not verified identities. Invitation links use URL fragments, and the fragment is removed before mounting the YouTube player so its widget does not receive the invitation in the page URL. Share on WhatsApp opens a prefilled invitation; you choose the recipient and send it yourself.
 
 **Back to lobby** keeps your seat and offers Resume room. **Release my seat** removes membership; the last release deletes the room and history. New members can see retained queue and chat. Browser-data deletion loses the anonymous identity; create a new room if the old seat cannot be released. Rooms expire after seven days. Expired rooms are inaccessible and are removed on a subsequent room-open request, or by the admin-only cleanup function.
 

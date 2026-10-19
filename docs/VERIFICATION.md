@@ -1,5 +1,9 @@
 # Verification record
 
+## Short invitations (October 19, 2026)
+
+All 24 automated tests and the build pass. Hosted admission checks pass with uppercase grouped ten-character codes. The migration shortens existing codes while preserving the originals as aliases; database tests verify old invitations still join the same room after rerunning the migration. WhatsApp sharing is a user-initiated prefilled link, with no automatic sending.
+
 ## Scheduled synchronization (October 19, 2026)
 
 Playback and track-change timestamps now schedule execution 1500ms ahead on the measured server clock. Tests cover future deadlines, pause-position projection, exact scheduled seeking, transition deadlines, waiting before deadlines and tighter drift correction. Real physical-phone timing still needs measurement; no zero-gap claim is made.

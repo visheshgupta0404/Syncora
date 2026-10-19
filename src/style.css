@@ -590,6 +590,32 @@ dialog small {
   flex-wrap: wrap;
   margin: 18px 0;
 }
+.invite-code {
+  text-align: center;
+  font-size: clamp(18px, 4vw, 25px);
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+  font-family: ui-monospace, monospace;
+}
+.whatsapp-share {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 1px solid #35885c;
+  border-radius: 9px;
+  color: #c4f4d6;
+  background: #17452e;
+  text-decoration: none;
+  font-size: 13px;
+}
+.whatsapp-share:hover {
+  background: #22623f;
+}
+.whatsapp-share:focus-visible {
+  outline: 2px solid #bcc7ff;
+  outline-offset: 3px;
+}
 .captcha {
   margin-top: 16px;
 }

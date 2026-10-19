@@ -1,7 +1,7 @@
 import React, { Component, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { captchaSiteKey, db } from "./backend";
-import { parseInvite, ROOM_CAPACITY } from "./model";
+import { parseInvite, formatRoomCode, ROOM_CAPACITY } from "./model";
 import { readSaved, save } from "./storage";
 import { useRoom } from "./useRoom";
 import Player from "./Player";
@@ -320,6 +320,15 @@ function App() {
           privately.
         </p>
         <label>
+          Room code
+          <input
+            className="invite-code"
+            readOnly
+            value={formatRoomCode(room?.code)}
+            onFocus={(e) => e.target.select()}
+          />
+        </label>
+        <label>
           Invitation link
           <input readOnly value={invite} onFocus={(e) => e.target.select()} />
         </label>
@@ -327,7 +336,17 @@ function App() {
           <button className="primary" onClick={() => copy(invite)}>
             Copy invitation link
           </button>
-          <button onClick={() => copy(room?.code || "")}>Copy room code</button>
+          <button onClick={() => copy(formatRoomCode(room?.code))}>
+            Copy room code
+          </button>
+          <a
+            className="whatsapp-share"
+            href={`https://wa.me/?text=${encodeURIComponent(`Join my Syncora room! Code: ${formatRoomCode(room?.code)}\n${invite}`)}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Share on WhatsApp ↗
+          </a>
           <button onClick={() => inviteDialog.current.close()}>Close</button>
         </div>
         <small>

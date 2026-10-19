@@ -7,6 +7,7 @@ import {
   targetPosition,
   parseInvite,
   formatTime,
+  formatRoomCode,
 } from "./model.js";
 import { playbackDecision } from "./playerSync.js";
 const track = (n) => ({
@@ -97,6 +98,12 @@ test("chat and queue have bounds and reject invalid content", () => {
   assert.throws(() => reduce(s, { type: "add", payload: track(100) }), /full/);
 });
 test("invitation parsing uses fragments and validates code length", () => {
+  assert.equal(formatRoomCode("a1b2c3d4e5"), "A1B2C-3D4E5");
+  assert.equal(parseInvite("A1B2C-3D4E5"), "a1b2c3d4e5");
+  assert.equal(
+    parseInvite("https://syncora.example/#room=a1b2c3d4e5"),
+    "a1b2c3d4e5",
+  );
   const code = "abcdef0123456789abcdef0123456789";
   assert.equal(parseInvite(`https://syncora.example/#room=${code}`), code);
   assert.equal(parseInvite(code.toUpperCase()), code);

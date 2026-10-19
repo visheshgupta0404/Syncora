@@ -169,6 +169,15 @@ test("six-seat migration preserves existing two-person rooms and their history",
   );
   await pg.exec(migration);
   await pg.exec(migration);
+  await pg.exec(
+    await readFile(
+      new URL(
+        "../supabase/migrations/20261019_short_room_codes.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
   const preserved = (await pg.query("select * from rooms where id=$1", [r.id]))
     .rows[0];
   assert.deepEqual(preserved.state, r.state);
@@ -283,6 +292,33 @@ test("playlist migration preserves a legacy current video and is rerunnable", as
     ["1", "2"],
   );
   assert.equal(r.state.current.key, "1");
+});
+test("short codes admit formatted input and legacy invitations remain valid", async () => {
+  let r = await open();
+  assert.match(r.code, /^[a-f0-9]{10}$/);
+  await identity(users[1]);
+  assert.equal(
+    (await open(`${r.code.slice(0, 5)}-${r.code.slice(5)}`.toUpperCase())).id,
+    r.id,
+  );
+  await pg.exec("reset role");
+  const oldCode = "abcdef0123456789abcdef0123456789";
+  await pg.query("update rooms set code=$1 where id=$2", [oldCode, r.id]);
+  const migration = await readFile(
+    new URL(
+      "../supabase/migrations/20261019_short_room_codes.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  await pg.exec(migration);
+  await pg.exec(migration);
+  await identity(users[2]);
+  const upgraded = await open(oldCode);
+  assert.equal(upgraded.id, r.id);
+  assert.match(upgraded.code, /^[a-f0-9]{10}$/);
+  assert.equal(upgraded.legacy_code, oldCode);
+  await assert.rejects(open("bad-code"), /Invalid room code/);
 });
 test("server validates payloads and stamps authors and timestamps", async () => {
   let r = await open();

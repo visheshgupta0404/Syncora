@@ -45,8 +45,11 @@ try {
   }
   console.log("PASS: seven independent guest sessions");
   room = await rpc(clients[0], "open_room", { invite: null });
+  assert.match(room.code, /^[a-f0-9]{10}$/);
   for (let i = 1; i < 6; i++) {
-    const joined = await rpc(clients[i], "open_room", { invite: room.code });
+    const joined = await rpc(clients[i], "open_room", {
+      invite: `${room.code.slice(0, 5)}-${room.code.slice(5)}`.toUpperCase(),
+    });
     assert.equal(joined.members.length, i + 1);
   }
   await assert.rejects(

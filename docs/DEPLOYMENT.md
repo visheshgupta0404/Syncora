@@ -75,6 +75,8 @@ Use the checks in [VERIFICATION.md](VERIFICATION.md) before calling the hosted s
 
 ## Upgrade existing rooms to six seats
 
+For short room codes, run `supabase/migrations/20261019_short_room_codes.sql` before deploying the frontend. It shortens existing long codes and retains them as aliases so old invitations continue working. New room-code collisions are retried automatically.
+
 For scheduled synchronization, run `supabase/migrations/20261019_scheduled_playback.sql` after the rotating-playlist migration, then deploy the matching frontend and reload every connected device. It changes playback timestamps to shared deadlines 1500ms ahead without changing room data.
 
 After the reusable-playlist migration, run `supabase/migrations/20261019_rotating_playlist.sql` to keep the active video first and rotate completed/skipped videos to the bottom. Existing entries and playback position are preserved. Refresh all open apps after deployment.

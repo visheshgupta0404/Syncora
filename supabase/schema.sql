@@ -2,13 +2,16 @@
 begin;
 create table if not exists public.rooms (
  id uuid primary key default gen_random_uuid(),
- code text unique not null default replace(gen_random_uuid()::text, '-', ''),
+ code text unique not null default substr(replace(gen_random_uuid()::text, '-', ''), 1, 10),
  members uuid[] not null,
  state jsonb not null default '{"queue":[],"current":null,"playing":false,"position":0,"at":0,"messages":[]}',
  version bigint not null default 0,
  expires_at timestamptz not null default now() + interval '7 days'
 );
 alter table public.rooms add column if not exists recent_commands text[] not null default '{}';
+alter table public.rooms add column if not exists legacy_code text;
+create unique index if not exists rooms_legacy_code_idx on public.rooms(legacy_code);
+alter table public.rooms alter column code set default substr(replace(gen_random_uuid()::text, '-', ''), 1, 10);
 create index if not exists rooms_expiry_idx on public.rooms(expires_at);
 alter table public.rooms enable row level security;
 revoke all on public.rooms from anon, authenticated;
@@ -39,7 +42,7 @@ revoke all on function public.check_room_limit(text, integer) from public, anon,
 
 create or replace function public.open_room(invite text default null)
 returns public.rooms language plpgsql security definer set search_path = public as $$
-declare r public.rooms;
+declare r public.rooms; attempts integer := 0;
 begin
  perform check_room_limit('open', 10);
  -- Opportunistic retention cleanup; admin Cron can also run cleanup_syncora.
@@ -49,10 +52,19 @@ begin
  if invite is null then
  if (select count(*) from rooms where auth.uid() = any(members) and expires_at > now()) >= 5
  then raise exception 'You already have five active rooms. Leave one first.'; end if;
+ loop
+ begin
  insert into rooms(members) values(array[auth.uid()]) returning * into r;
+ exit;
+ exception when unique_violation then
+ attempts := attempts + 1;
+ if attempts >= 5 then raise exception 'Could not create a room. Please retry.'; end if;
+ end;
+ end loop;
  else
- if invite !~ '^[a-fA-F0-9]{32}$' then raise exception 'Invalid room code'; end if;
- select * into r from rooms where code = lower(invite) and expires_at > now() for update;
+ invite := lower(replace(trim(invite), '-', ''));
+ if invite !~ '^([a-f0-9]{10}|[a-f0-9]{32})$' then raise exception 'Invalid room code'; end if;
+ select * into r from rooms where (code = invite or legacy_code = invite) and expires_at > now() for update;
  if r.id is null then raise exception 'Room not found or expired'; end if;
  if not auth.uid() = any(r.members) then
  if cardinality(r.members) >= 6 then raise exception 'This room is full (maximum 6 people)'; end if;
