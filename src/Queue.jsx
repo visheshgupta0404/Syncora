@@ -6,6 +6,15 @@ export default function Queue({ queue, dispatch, disabled }) {
           <article key={v.key}>
             <div className="track">
               <span className="number">{String(i + 1).padStart(2, "0")}</span>
+              <img
+                className="queue-thumbnail"
+                src={`https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`}
+                alt=""
+                width="80"
+                height="45"
+                loading="lazy"
+                referrerPolicy="no-referrer"
+              />
               <strong>{v.title}</strong>
             </div>
             <div className="rowactions">
