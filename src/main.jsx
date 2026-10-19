@@ -1,4 +1,10 @@
-import React, { Component, useEffect, useRef, useState } from "react";
+import React, {
+  Component,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { captchaSiteKey, db } from "./backend";
 import { parseInvite, formatRoomCode, ROOM_CAPACITY } from "./model";
@@ -32,8 +38,17 @@ class ErrorBoundary extends Component {
   }
 }
 function App() {
-  const [notice, setNotice] = useState(""),
+  const [notice, setNoticeState] = useState(null),
     [name, setName] = useState(() => readSaved("name", "You"));
+  const setNotice = useCallback(
+    (message) => setNoticeState(message ? { message } : null),
+    [],
+  );
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNoticeState(null), 3000);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const [code, setCode] = useState(() => parseInvite(location.href) || ""),
     [token, setToken] = useState(""),
     [captchaReset, setCaptchaReset] = useState(0),
@@ -379,7 +394,7 @@ function App() {
       </dialog>
       {notice ? (
         <div className="toast" role="status">
-          <span>{notice}</span>
+          <span>{notice.message}</span>
           <button aria-label="Dismiss message" onClick={() => setNotice("")}>
             ×
           </button>
