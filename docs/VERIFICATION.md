@@ -34,7 +34,13 @@ The live check is opt-in and creates three guest identities on each run. It refu
 
 The real browser app created a hosted room, displayed **Live room**, and restored that same membership after a full reload. The room invitation fragment is removed before the YouTube iframe mounts, and the resulting iframe page-URL parameters were checked to contain no invitation code.
 
-Physical-device and deployment checks still required:
+## Cloudflare production acceptance
+
+Production URL: https://syncora-a6v.pages.dev/. Pages is Git-integrated with `main`, build command `npm run build`, output `dist`, Node 24 and the public Supabase build variables. The initial source-root deployment served an uncompiled `/src/main.jsx` entry and a blank page; correcting those build settings and redeploying fixed it.
+
+Verified on the public HTTPS origin: lobby rendering, guest room creation, private realtime **Live room** status, queue addition, official YouTube playback/pause, and persisted chat. HTTP checks confirmed built `/assets/` references (no source JSX entry), the standalone install manifest, CSP, `X-Frame-Options: DENY` and `strict-origin-when-cross-origin` referrer policy. The browser console reported no errors during the smoke test.
+
+The table below remains the device/release checklist; backend rules and desktop browser checks above have already passed. Physical-phone, CAPTCHA, offline installation and update-cycle checks remain:
 
 | Check                                        | Expected result                                                       |
 | -------------------------------------------- | --------------------------------------------------------------------- |
@@ -53,4 +59,4 @@ Physical-device and deployment checks still required:
 | New deployment                               | Update prompt appears and reload installs the new shell               |
 | Full-screen/PiP                              | Native behavior/fallback is accurate; unavailable PiP is not promised |
 
-Keep videos foregrounded on both phones. Ads, buffering and iOS restrictions can create temporary drift; use Resync. Hosted Auth/PostgREST and WebSocket delivery have been verified; physical-device playback, CAPTCHA, installation and a public deployment still need acceptance.
+Keep videos foregrounded on both phones. Ads, buffering and iOS restrictions can create temporary drift; use Resync. Hosted Auth/PostgREST, WebSocket delivery and the public deployment have been verified; physical-device playback, CAPTCHA and installation still need acceptance.
