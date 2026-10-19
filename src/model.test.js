@@ -9,7 +9,7 @@ import {
   formatTime,
   formatRoomCode,
 } from "./model.js";
-import { playbackDecision } from "./playerSync.js";
+import { playbackDecision, resyncDecision } from "./playerSync.js";
 const track = (n) => ({
   key: String(n),
   id: "dQw4w9WgXcQ",
@@ -143,4 +143,36 @@ test("playback correction distinguishes a seek, drift, buffering and blocked pla
   );
   assert.equal(targetPosition({ ...state, at: 4000 }, 2000), 10);
   assert.equal(playbackDecision({ ...base, position: 12.2 }).type, "correct");
+});
+
+test("manual resync catches a moving timeline after buffering and restores pause locally", () => {
+  const state = {
+    ...initialState(),
+    current: track(1),
+    playing: true,
+    position: 10,
+    at: 1000,
+  };
+  const base = { state, position: 10, playerState: 1, now: 2000 };
+  assert.deepEqual(resyncDecision(base), {
+    position: 11,
+    playing: true,
+    seek: true,
+  });
+  assert.equal(resyncDecision({ ...base, playerState: 3 }), null);
+  assert.deepEqual(resyncDecision({ ...base, now: 5000 }), {
+    position: 14,
+    playing: true,
+    seek: true,
+  });
+  assert.equal(resyncDecision({ ...base, position: 10.9 }), null);
+  assert.deepEqual(
+    resyncDecision({ ...base, state: { ...state, playing: false } }),
+    { position: 10, playing: false, seek: false },
+  );
+  assert.equal(resyncDecision({ ...base, now: 500 }), null);
+  assert.equal(
+    resyncDecision({ ...base, state: { ...state, current: null } }),
+    null,
+  );
 });

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { formatTime, targetPosition } from "./model";
-import { playbackDecision } from "./playerSync";
+import { playbackDecision, resyncDecision } from "./playerSync";
 let api;
 function youtube() {
   return (api ??= new Promise((resolve, reject) => {
@@ -44,7 +44,8 @@ export default function Player({
     suppressed = useRef(0),
     sample = useRef(null),
     blockedRef = useRef(false),
-    lastCommand = useRef(0);
+    lastCommand = useRef(0),
+    resyncUntil = useRef(0);
   const [ready, setReady] = useState(false),
     [attempt, setAttempt] = useState(0),
     [error, setError] = useState(""),
@@ -61,6 +62,7 @@ export default function Player({
     nativeSeek.current = null;
   }
   function transport(playing, position, seek = false) {
+    resyncUntil.current = 0;
     const current = latest.current;
     if (
       current.disabled ||
@@ -161,6 +163,7 @@ export default function Player({
                 Date.now() < suppressed.current ||
                 !current.state.current ||
                 current.disabled ||
+                Date.now() < resyncUntil.current ||
                 Date.now() + current.offset < current.state.at
               )
                 return;
@@ -200,6 +203,7 @@ export default function Player({
   useEffect(() => {
     if (!ready) return;
     const p = player.current;
+    resyncUntil.current = 0;
     suppress();
     setDraft(null);
     setError("");
@@ -246,6 +250,26 @@ export default function Player({
         now = Date.now() + c.offset;
       setTime(position);
       setDuration(p.getDuration() || 0);
+      // Briefly follow the moving room timeline after a manual resync.
+      // Ignore recovery events so this device cannot pause or seek the room.
+      if (Date.now() < resyncUntil.current) {
+        sample.current = null;
+        if (!document.hidden && !blockedRef.current) {
+          const correction = resyncDecision({
+            state: c.state,
+            position,
+            playerState: ps,
+            now,
+          });
+          if (correction) {
+            suppress();
+            if (correction.seek) p.seekTo(correction.position, true);
+            if (correction.playing) p.playVideo();
+            else p.pauseVideo();
+          }
+        }
+        return;
+      }
       const decision = playbackDecision({
         state: c.state,
         position,
@@ -429,10 +453,15 @@ export default function Player({
           disabled={!ready || !key || scheduled}
           onClick={() => {
             suppress();
+            resyncUntil.current = Date.now() + 6000;
+            setDraft(null);
             const pos = targetPosition(state, Date.now() + offset);
             player.current.seekTo(pos, true);
             if (state.playing) player.current.playVideo();
-            notify("Resynced this device to the shared playback position.");
+            else player.current.pauseVideo();
+            notify(
+              "Catching this device up to the room. Buffering may take a moment.",
+            );
           }}
         >
           Resync ↔

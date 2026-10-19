@@ -28,3 +28,13 @@ export function playbackDecision({
     return { type: "correct", position: target };
   return { type: "wait" };
 }
+
+// Local recovery only: never publish player events or seek repeatedly while buffering.
+export function resyncDecision({ state, position, playerState, now }) {
+  if (!state.current || now < state.at || ![1, 2].includes(playerState))
+    return null;
+  const target = targetPosition(state, now);
+  const seek = Math.abs(position - target) > 0.25;
+  if (!seek && (playerState === 1) === state.playing) return null;
+  return { position: target, playing: state.playing, seek };
+}
