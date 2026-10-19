@@ -1,5 +1,9 @@
 # Verification record
 
+## Syncora Moments address (October 19, 2026)
+
+`https://syncoramoments.pages.dev/` is deployed from `main` with the same Supabase backend and encrypted YouTube API key. Verified HTTP 200, compiled assets, CSP, anonymous room creation, private realtime connection, eight real YouTube search results, and WhatsApp invitations using the new hostname. The temporary test room was released. The previous `syncora-a6v.pages.dev` deployment remains active. Browser sessions and installed apps are origin-specific, so users join again at the new address.
+
 ## Short invitations (October 19, 2026)
 
 All 24 automated tests and the build pass. Hosted admission checks pass with uppercase grouped ten-character codes. The migration shortens existing codes while preserving the originals as aliases; database tests verify old invitations still join the same room after rerunning the migration. WhatsApp sharing is a user-initiated prefilled link, with no automatic sending.
