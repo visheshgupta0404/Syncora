@@ -223,7 +223,7 @@ export default function Player({
     const apply = () => {
       suppress();
       const position = targetPosition(state, Date.now() + offset);
-      if (Math.abs(p.getCurrentTime() - position) > 1.5)
+      if (Math.abs(p.getCurrentTime() - position) > 0.25)
         p.seekTo(position, true);
       if (state.playing && !blockedRef.current) p.playVideo();
       else if (!state.playing) p.pauseVideo();
