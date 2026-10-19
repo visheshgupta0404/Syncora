@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 export default function Chat({ messages, name, dispatch, disabled }) {
   const [text, setText] = useState(""),
     [pending, setPending] = useState(false);
@@ -10,7 +10,7 @@ export default function Chat({ messages, name, dispatch, disabled }) {
   }, [messages.length, messages.at(-1)?.id]);
   async function send(e) {
     e.preventDefault();
-    if (!text.trim()) return;
+    if (!text.trim() || disabled || pending) return;
     setPending(true);
     const ok = await dispatch({
       type: "chat",
@@ -28,6 +28,13 @@ export default function Chat({ messages, name, dispatch, disabled }) {
   }
   return (
     <div className="chat">
+      <header className="chat-heading">
+        <div>
+          <h2>Room conversation</h2>
+          <p>Share a thought while you listen.</p>
+        </div>
+        <span className="chat-count">{messages.length} / 100</span>
+      </header>
       <div
         className="messages"
         role="log"
@@ -40,46 +47,83 @@ export default function Chat({ messages, name, dispatch, disabled }) {
         }}
       >
         {messages.length ? (
-          messages.map((m) => (
-            <article key={m.id}>
-              <small>
-                {m.name} ·{" "}
-                {new Date(m.at).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </small>
-              <p>{m.text}</p>
-            </article>
+          messages.map((m, i) => (
+            <Fragment key={m.id}>
+              {!i ||
+              new Date(messages[i - 1].at).toDateString() !==
+                new Date(m.at).toDateString() ? (
+                <div className="chat-date">
+                  {new Date(m.at).toLocaleDateString([], {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </div>
+              ) : null}
+              <article className="chat-message">
+                <span className="chat-avatar" aria-hidden="true">
+                  {(m.name || "L").slice(0, 1).toUpperCase()}
+                </span>
+                <div className="chat-bubble">
+                  <div className="chat-meta">
+                    <strong>{m.name}</strong>
+                    <time dateTime={new Date(m.at).toISOString()}>
+                      {new Date(m.at).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                  </div>
+                  <p>{m.text}</p>
+                </div>
+              </article>
+            </Fragment>
           ))
         ) : (
-          <div className="empty">
-            ♡<h3>Say a little hello</h3>
-            <p>A conversation just for this room.</p>
+          <div className="chat-empty">
+            <span aria-hidden="true">✦</span>
+            <h3>Start the conversation</h3>
+            <p>
+              Talk about the video, share a reaction,
+              <br />
+              or say hello to your room.
+            </p>
           </div>
         )}
       </div>
-      <form onSubmit={send}>
+      <form onSubmit={send} className="chat-composer">
         <label>
           Message
-          <input
+          <textarea
+            rows={2}
+            disabled={pending}
             maxLength={500}
             required
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Something on your mind?"
+            placeholder="Write a message…"
+            onKeyDown={(e) => {
+              if (
+                e.key === "Enter" &&
+                !e.shiftKey &&
+                !e.nativeEvent.isComposing
+              ) {
+                e.preventDefault();
+                e.currentTarget.form.requestSubmit();
+              }
+            }}
           />
         </label>
         <button
           className="primary"
           disabled={disabled || pending || !text.trim()}
         >
-          {pending ? "Sending…" : "Send ↗"}
+          {pending ? "Sending…" : "Send ↑"}
         </button>
       </form>
-      <small className="muted">
-        Latest 100 messages · visible to all room members
-      </small>
+      <div className="chat-footer">
+        <small>Visible to everyone in this room</small>
+        <small>{text.length}/500</small>
+      </div>
     </div>
   );
 }
