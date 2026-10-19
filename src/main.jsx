@@ -73,7 +73,7 @@ function App() {
   async function copy(text) {
     try {
       await navigator.clipboard.writeText(text);
-      setNotice("Invitation copied. Share it privately with your partner.");
+      setNotice("Invitation copied. Share it privately with your group.");
     } catch {
       inviteDialog.current?.showModal();
     }
@@ -195,7 +195,7 @@ function App() {
             <div className="room-actions">
               {!demo ? (
                 <button onClick={() => inviteDialog.current.showModal()}>
-                  Invite partner ↗
+                  Invite people ↗
                 </button>
               ) : null}
               <button disabled={busy} onClick={() => session.leave()}>
