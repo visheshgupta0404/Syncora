@@ -277,9 +277,13 @@ nav {
   display: flex;
   border-bottom: 1px solid #303544;
   padding: 9px 16px 0;
-  gap: 15px;
+  gap: clamp(4px, 2cqi, 15px);
+  flex-wrap: wrap;
 }
 nav button {
+  flex: 1;
+  min-width: 0;
+  font-size: clamp(11px, 3.3cqi, 14px);
   border: 0;
   background: none;
   border-radius: 0;

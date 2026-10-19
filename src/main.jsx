@@ -6,6 +6,7 @@ import { readSaved, save } from "./storage";
 import { useRoom } from "./useRoom";
 import Player from "./Player";
 import Queue from "./Queue";
+import AddVideos from "./AddVideos";
 import Chat from "./Chat";
 import Captcha from "./Captcha";
 import Install from "./Install";
@@ -37,7 +38,7 @@ function App() {
     [token, setToken] = useState(""),
     [captchaReset, setCaptchaReset] = useState(0),
     [hasSession, setHasSession] = useState(false);
-  const [tab, setTab] = useState("queue");
+  const [tab, setTab] = useState("search");
   const inviteDialog = useRef(null),
     helpDialog = useRef(null);
   const session = useRoom(setNotice),
@@ -262,6 +263,13 @@ function App() {
             <aside className="panel">
               <nav aria-label="Room panels">
                 <button
+                  aria-pressed={tab === "search"}
+                  className={tab === "search" ? "selected" : ""}
+                  onClick={() => setTab("search")}
+                >
+                  Search
+                </button>
+                <button
                   aria-pressed={tab === "queue"}
                   className={tab === "queue" ? "selected" : ""}
                   onClick={() => setTab("queue")}
@@ -276,6 +284,14 @@ function App() {
                   Conversation <b>{state.messages.length}</b>
                 </button>
               </nav>
+              <div hidden={tab !== "search"}>
+                <AddVideos
+                  queue={state.queue}
+                  dispatch={dispatch}
+                  notify={setNotice}
+                  disabled={disabled}
+                />
+              </div>
               {tab === "queue" ? (
                 <Queue
                   queue={state.queue}
@@ -283,14 +299,14 @@ function App() {
                   notify={setNotice}
                   disabled={disabled}
                 />
-              ) : (
+              ) : tab === "chat" ? (
                 <Chat
                   messages={state.messages}
                   name={name}
                   dispatch={dispatch}
                   disabled={disabled}
                 />
-              )}
+              ) : null}
             </aside>
           </div>
         </main>

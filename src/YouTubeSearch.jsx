@@ -79,7 +79,7 @@ export default function YouTubeSearch({ dispatch, disabled, full, notify }) {
     }
   }
   return (
-    <details className="youtube-search">
+    <details className="youtube-search" open>
       <summary>
         Search YouTube <span>Find a song or video</span>
       </summary>
