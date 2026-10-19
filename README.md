@@ -4,6 +4,7 @@ A private listening room for up to six people, built with React, Vite, Supabase 
 
 ## Features
 
+- In-app YouTube search with thumbnails, channel names and Add to queue. Requires a server-only YouTube API key; see [search setup](docs/YOUTUBE-SEARCH.md).
 - Random private invitation codes and shareable links; database-enforced six-person capacity.
 - Official YouTube player with visible native controls; shared play/pause, seek slider, ±10 seconds, skip and manual resync.
 - Shared queue: add, remove, reorder, play immediately and play next; up to 100 videos.

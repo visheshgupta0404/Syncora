@@ -1,5 +1,9 @@
 # Verification record
 
+## YouTube search (October 19, 2026)
+
+All 19 automated tests and the production build pass. Search endpoint tests cover guest/room authorization, embeddable-video filters, result filtering, quota and upstream failures, and keeping the API key out of responses. The dedicated Syncora Google project has YouTube Data API v3 enabled with a key restricted to that API, stored as an encrypted Cloudflare production secret. The deployed app returned eight real search results; adding a result saved it in the shared queue and the item remained after reload. Actual Android/iPhone hardware testing remains outstanding.
+
 ## Automated
 
 `npm test` executes model/playback/config tests and the actual application SQL in embedded Postgres (PGlite). No remote account or credentials are used. Tests cover:
