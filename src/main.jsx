@@ -341,7 +341,7 @@ function App() {
           </button>
           <a
             className="whatsapp-share"
-            href={`https://wa.me/?text=${encodeURIComponent(`Join my Syncora room! Code: ${formatRoomCode(room?.code)}\n${invite}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`Hey lets make some memories together with Syncora\njoin the room via this link\n${invite}`)}`}
             target="_blank"
             rel="noreferrer"
           >
