@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { formatTime, targetPosition } from "./model";
-import { playbackDecision, resyncDecision } from "./playerSync";
+import { formatTime, targetPosition } from "../lib/model";
+import { playbackDecision, resyncDecision } from "../lib/playerSync";
 let api;
 function youtube() {
   return (api ??= new Promise((resolve, reject) => {

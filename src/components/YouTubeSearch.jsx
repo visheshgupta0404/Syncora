@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { db } from "./backend";
+import { db } from "../lib/backend";
 
 function decodeTitle(value) {
   const text = document.createElement("textarea");

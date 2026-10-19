@@ -8,8 +8,8 @@ import {
   parseInvite,
   formatTime,
   formatRoomCode,
-} from "./model.js";
-import { playbackDecision, resyncDecision } from "./playerSync.js";
+} from "../src/lib/model.js";
+import { playbackDecision, resyncDecision } from "../src/lib/playerSync.js";
 const track = (n) => ({
   key: String(n),
   id: "dQw4w9WgXcQ",

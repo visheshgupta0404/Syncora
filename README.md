@@ -1,74 +1,55 @@
 # Syncora
 
-A private listening room for up to six people, built with React, Vite, Supabase and an installable PWA shell. Designed for Android and iPhone. The application can run as a local demo without any account or credentials; sharing across devices needs a Supabase project.
+Watch and listen together in a private room for up to **6 people**.
+
+**[Open Syncora](https://syncoramoments.pages.dev/)**
 
 ## Features
 
-- In-app YouTube search with thumbnails, channel names and Add to queue. Requires a server-only YouTube API key; see [search setup](docs/YOUTUBE-SEARCH.md).
-- Random private invitation codes and shareable links; database-enforced six-person capacity.
-- Official YouTube player with visible native controls; shared play/pause, seek slider, ±10 seconds, skip and manual resync.
-- Reusable shared playlist: add, remove, reorder, play immediately and play next; up to 100 videos. The current video stays at the top and the second is marked Up next. Finishing, skipping or selecting another video moves the previous video to the bottom. Multiple videos cycle for reuse; a single-video playlist stops after finishing. Pause does not rotate the list. Previous reverses the rotation; Restart replays the top video. Removing the current track stops playback. Room expiry still applies.
-- Room chat, persistent listener name and latest 100 messages; messages carry server-assigned authors and timestamps.
-- Room recovery after reload, connection status, private presence, reconnect fetches, local offline detection and explicit seat release.
-- Server-clock offset measurement and drift correction. Track-scoped commands prevent stale playback events from advancing or rewinding another video.
-- Full-screen with a native-player fallback on iPhone.
-- Install icons, cached offline app shell, update notification, optional Cloudflare Turnstile, server-side validation, bounded retry deduplication and request limits.
+- Private room codes, invite links and WhatsApp sharing.
+- YouTube search, synchronized playback, restart video and Resync.
+- Shared playlist with thumbnails, reorder, play next and automatic rotation.
+- Live chat, full-screen playback and installation on Android and iPhone.
 
-## Run locally
+## Local development
 
-Node 22.12+ is required; Node 24 is used in CI.
+Use Node.js 24.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open the printed localhost address and select **Explore the local demo**. The demo saves in this browser only and pauses restored playback. Demo storage is separate from shared rooms. Shared-room chat is never copied to localStorage by Syncora; Supabase stores its authentication session there.
+Choose **Explore the local demo** to try it without configuration. For shared rooms, copy `.env.example` to `.env.local` and follow the [setup guide](docs/DEPLOYMENT.md).
 
 ```sh
-npm test       # model, playback decisions, config checks, actual Postgres/RLS tests
-npm run build # production bundle, manifest and service worker in dist/
-npm run preview
+npm test
+npm run build
 ```
 
-## Connect and deploy
+## Project structure
 
-Production: [syncoramoments.pages.dev](https://syncoramoments.pages.dev/). The previous `syncora-a6v.pages.dev` address remains available.
+```text
+src/
+  components/    Player, search, queue, chat and installation
+  hooks/         Shared room lifecycle
+  lib/           Backend, playback logic and storage
+  main.jsx       App entry and layout
+  style.css      Responsive styles
+functions/api/   Server-side YouTube search
+supabase/        Database schema and migrations
+public/          App icons and hosting configuration
+scripts/         Configuration and live checks
+tests/           Automated tests
+docs/            Setup and verification guides
+```
 
-Cloudflare Pages is connected to this repository's `main` branch with automatic deployments, build command `npm run build`, output directory `dist`, and Node 24. Public Supabase connection settings are configured in Pages. The owner's free Supabase project is configured in Mumbai; its schema and anonymous Auth are enabled, and hosted room/realtime checks have passed. Local connection settings stay in ignored `.env.local`; no keys are committed. See [the deployment guide](docs/DEPLOYMENT.md) to reproduce the setup.
+## Notes
 
-Copy `.env.example` to `.env.local`, fill in the Supabase URL and **public publishable/anon key**, then restart Vite. Run `supabase/schema.sql` in the Supabase SQL editor and enable anonymous authentication. The schema can be rerun and upgrades milestone 1. It removes the old whole-state writer in favor of validated commands.
+Built with React, Vite, Supabase and Cloudflare Pages. Pushes to `main` deploy automatically.
 
-Never put a service-role key, secret key, database password or Turnstile secret in a `VITE_` variable. The build checks for common privileged-key mistakes. Frontend environment variables become public in the built JavaScript.
+Keep the app visible for synchronization. iPhone may need a tap to enable sound; background playback and exact 0 ms synchronization are not guaranteed. Playback uses YouTube's official embedded player.
 
-## Room behavior and privacy
+Rooms expire after 7 days. Invitations grant room access; chat is visible to members and the database administrator and is not end-to-end encrypted.
 
-Room codes use ten random hexadecimal characters, displayed in two groups of five. Legacy invitations remain valid after shortening existing codes. Up to six authenticated identities may claim a room, including its creator. Everyone has equal control; display names are labels, not verified identities. Invitation links use URL fragments, and the fragment is removed before mounting the YouTube player so its widget does not receive the invitation in the page URL. Share on WhatsApp opens a prefilled invitation; you choose the recipient and send it yourself.
-
-**Back to lobby** keeps your seat and offers Resume room. **Release my seat** removes membership; the last release deletes the room and history. New members can see retained queue and chat. Browser-data deletion loses the anonymous identity; create a new room if the old seat cannot be released. Rooms expire after seven days. Expired rooms are inaccessible and are removed on a subsequent room-open request, or by the admin-only cleanup function.
-
-Chat is not end-to-end encrypted. All members and the Supabase project administrator can read it. Do not treat a room code as an account password or share the invitation publicly. Private presence is restricted by Realtime authorization policies. Authentication CAPTCHA should be enabled before public exposure. Per-identity limits apply to accepted room opens and edits; CAPTCHA and Supabase Auth rate limits protect identity creation. This small-group app is not a hardened public multi-tenant service.
-
-Commands are applied under a database row lock, with 2048 recent command receipts per room to deduplicate immediate network retries. Automatic end-of-video skip checks the current queue item so several players cannot advance the queue more than once. Old-track transport and removed-item edits are ignored. Offline edits are rejected rather than replayed later. Realtime delivers updates; a 15-second recovery fetch and visibility/network events restore state when needed. Presence counts identities, so two tabs from the same browser count once.
-
-## YouTube and iPhone limitations
-
-Playback commands and video transitions use a shared server-clock deadline 1.5 seconds ahead. Use Syncora's controls for scheduled play/pause/seek; new videos are cued before their start deadline. Late devices catch up to the shared timeline, with correction after drift exceeds one second. This is closer synchronization, not a zero-millisecond guarantee: YouTube buffering, ads, autoplay restrictions and backgrounded devices can still diverge.
-
-Uses the official IFrame Player API. Syncora does not download or extract media, hide ads/branding, cover player controls, or bypass embedding restrictions. Loading the player/video contacts YouTube. Labels are user-entered; no YouTube Data API key is needed.
-
-Each iPhone may require a direct tap to enable sound. Keep both apps visible: screen lock, app switching, ads and buffering can disrupt playback or synchronization. Playback is approximate, not sample-accurate; **Resync** catches a device up. There is no background-audio guarantee.
-
-Full-screen uses the browser API where available and otherwise the YouTube player button.
-
-Install on Android through the browser's **Install app** option. On iPhone use **Safari → Share → Add to Home Screen**. Installation and service workers require HTTPS (localhost is allowed for development). Only the app shell is cached; YouTube and shared rooms still need internet. Updates apply when you choose the update button, which reloads the app.
-
-## Verification
-
-See [verification notes and remaining device checks](docs/VERIFICATION.md). Database tests use embedded Postgres through PGlite with simulated Supabase Auth/Realtime session context. They execute the real schema and RLS policies, but do not substitute for a hosted Supabase Auth/PostgREST/WebSocket test or physical iPhone/Android tests.
-
-CI runs on pushes to `main`. The optional Cloudflare deployment workflow runs manually after account/project configuration. This repository follows the user's preference to work directly on `main` and push completed changes after checks pass.
-
-## Official references
-
-[YouTube API](https://developers.google.com/youtube/iframe_api_reference) · [embed parameters](https://developers.google.com/youtube/player_parameters) · [Supabase anonymous Auth](https://supabase.com/docs/guides/auth/auth-anonymous) · [CAPTCHA](https://supabase.com/docs/guides/auth/auth-captcha) · [Realtime authorization](https://supabase.com/docs/guides/realtime/authorization) · [Cloudflare Pages](https://developers.cloudflare.com/pages/get-started/git-integration/) · [Safari video](https://developer.apple.com/documentation/webkit/delivering-video-content-for-safari)
+[Deployment](docs/DEPLOYMENT.md) · [YouTube search setup](docs/YOUTUBE-SEARCH.md) · [Verification](docs/VERIFICATION.md)

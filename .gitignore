@@ -1,6 +1,33 @@
+# Dependencies and generated output
 node_modules/
 dist/
+coverage/
+.vite/
+.cache/
+
+# Local environment and secrets
 .env*
 !.env.example
+.dev.vars
+.dev.vars.*
+.wrangler/
+supabase/.temp/
+supabase/.branches/
+
+# Logs and temporary files
+*.log
+*.tsbuildinfo
+*.tmp
+*.swp
+*.swo
 work/
 outputs/
+playwright-report/
+test-results/
+
+# Editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini

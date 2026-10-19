@@ -6,16 +6,16 @@ import React, {
   useState,
 } from "react";
 import { createRoot } from "react-dom/client";
-import { captchaSiteKey, db } from "./backend";
-import { parseInvite, formatRoomCode, ROOM_CAPACITY } from "./model";
-import { readSaved, save } from "./storage";
-import { useRoom } from "./useRoom";
-import Player from "./Player";
-import Queue from "./Queue";
-import AddVideos from "./AddVideos";
-import Chat from "./Chat";
-import Captcha from "./Captcha";
-import Install from "./Install";
+import { captchaSiteKey, db } from "./lib/backend";
+import { parseInvite, formatRoomCode, ROOM_CAPACITY } from "./lib/model";
+import { readSaved, save } from "./lib/storage";
+import { useRoom } from "./hooks/useRoom";
+import Player from "./components/Player";
+import Queue from "./components/Queue";
+import AddVideos from "./components/AddVideos";
+import Chat from "./components/Chat";
+import Captcha from "./components/Captcha";
+import Install from "./components/Install";
 import "./style.css";
 
 class ErrorBoundary extends Component {

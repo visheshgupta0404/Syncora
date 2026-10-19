@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { db, measureClock, readRoom, rpc, signIn } from "./backend";
-import { initialState, reduce } from "./model";
-import { readSaved, save } from "./storage";
+import { db, measureClock, readRoom, rpc, signIn } from "../lib/backend";
+import { initialState, reduce } from "../lib/model";
+import { readSaved, save } from "../lib/storage";
 
 export function useRoom(notify) {
   const [room, setRoom] = useState(null),

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { videoId } from "./model";
+import { videoId } from "../lib/model";
 import YouTubeSearch from "./YouTubeSearch";
 export default function AddVideos({ queue, dispatch, notify, disabled }) {
   const [url, setUrl] = useState(""),

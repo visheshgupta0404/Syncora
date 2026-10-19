@@ -1,14 +1,15 @@
-# Activate YouTube search
+# YouTube search setup
 
-Search uses the official YouTube Data API v3 through a Cloudflare Pages Function. The key stays on the server. Users must have a signed-in guest identity with an unexpired room. Results include eight embeddable videos; regional, age and playback restrictions may still apply.
+Search uses the official YouTube Data API through `/api/youtube-search`. The key stays on Cloudflare; requests require membership in an unexpired room.
 
-1. Sign into [Google Cloud Console](https://console.cloud.google.com/) with the account you want to own Syncora's API access. Create or select a project named Syncora.
-2. In **APIs & Services → Library**, enable **YouTube Data API v3**.
-3. Open **APIs & Services → Credentials → Create credentials → API key**. Restrict the key to **YouTube Data API v3** under API restrictions. This server-side integration cannot use browser HTTP-referrer restrictions, and Pages does not provide fixed outbound IPs. Keep the key secret.
-4. Review the project's YouTube API quotas and set a daily search quota you are comfortable with. Search runs only when someone submits the form, not on every keystroke. Guest authentication is not abuse-proof; Google's quota is the hard usage ceiling. Do not enable paid upgrades for this feature.
-5. In Cloudflare **Workers & Pages → syncora → Settings → Variables and Secrets**, add **YOUTUBE_API_KEY** as a **Secret** for Production. Never use a `VITE_` prefix. The existing `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` must also be available to the Function.
-6. Redeploy the latest main commit after saving the secret. Join a room, search for a video and choose **Add to queue**. Confirm a second member sees the item. Do not paste the key in chat, commit it, or place it in the public frontend.
+1. Create or select a project in [Google Cloud Console](https://console.cloud.google.com/).
+2. Enable **YouTube Data API v3** and create an API key restricted to that API.
+3. In Cloudflare Pages → **syncoramoments → Settings → Variables and Secrets**, save `YOUTUBE_API_KEY` as a production **Secret**. Never prefix it with `VITE_` or commit it.
+4. Ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are available to the function, then redeploy.
+5. Join a room, search and add a result; verify another member sees it.
 
-Until the secret is configured, search displays a setup message and pasting links continues to work. `npm run dev` serves the Vite frontend only; hosted Pages is required for the `/api/youtube-search` route. Endpoint tests mock Google and Supabase; they do not prove a real API key or quota is configured.
+Review Google's daily quota. Search runs on submission; authenticated access does not replace abuse protection. Pages has no fixed outbound IP, so an IP restriction is unsuitable here; browser referrer restrictions are unsuitable for this server-side key.
 
-Search terms are sent to Google/YouTube. Metadata is displayed as text and not retained by this endpoint. Adding a result copies its video ID and title into the normal shared queue. Playback continues through the official embedded player, with the existing iPhone foreground/tap limitations.
+`npm run dev` serves the frontend only. Test real search on hosted Pages. Pasting links works without the API key.
+
+Search terms go to Google/YouTube. Results are limited to eight embeddable videos; playback restrictions can still apply. Adding a result saves its video ID and title in the shared queue.
