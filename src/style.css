@@ -686,9 +686,12 @@ header {
     align-items: stretch;
   }
   .search-results article {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr);
   }
+  .search-results img { width: 90px; }
   .search-results article > button {
-    margin-left: auto;
+    grid-column: 1 / -1;
+    justify-self: end;
   }
 }
