@@ -181,7 +181,7 @@ function App() {
             </button>
             <small>
               {db
-                ? `Private rooms · ${ROOM_CAPACITY} seats · expire after 7 days`
+                ? `Private rooms · ${ROOM_CAPACITY} seats · expire after 7 inactive days`
                 : "Demo available · shared rooms need Supabase setup"}
             </small>
           </section>
@@ -383,7 +383,7 @@ function App() {
         <p>
           Room codes are private invitations. Chat is visible to members and the
           database administrator; it is not end-to-end encrypted. Rooms expire
-          after seven days; chat keeps the latest 100 messages.
+          after seven days of inactivity; chat keeps the latest 100 messages.
         </p>
         <button onClick={() => helpDialog.current.close()}>Got it</button>
       </dialog>

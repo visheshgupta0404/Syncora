@@ -56,7 +56,7 @@ Playback changes use a shared execution time 1.5 seconds ahead to help devices a
 
 Room invitations grant access and should be shared privately. A display name is a label, not a verified identity. Room members and the database administrator can read chat; it is not end-to-end encrypted.
 
-Rooms expire after seven days. The playlist remains reusable while the room exists, and chat retains the latest 100 messages. Releasing the final member's seat deletes the room and its history. Anonymous authentication records have a separate maintenance lifecycle.
+Rooms expire after seven days of inactivity. Joining the room or an accepted playback, queue or chat action renews the seven-day period; background refreshes do not. The playlist remains reusable while the room exists, and chat retains the latest 100 messages. Releasing the final member's seat deletes the room and its history. Anonymous authentication records have a separate maintenance lifecycle.
 
 The YouTube search key stays on the server. Database access rules restrict room data to its members. Videos use YouTube's official player, including its advertising, branding and embedding restrictions.
 
@@ -65,7 +65,7 @@ The YouTube search key stays on the server. Database access rules restrict room 
 | Area | Current position |
 | --- | --- |
 | Core features | Implemented and deployed |
-| Automated validation | Latest implementation checks passed: 25 tests and a production build |
+| Automated validation | Latest implementation checks passed: 27 tests and a production build |
 | Hosted services | Room access, live updates, search and deployment have been checked |
 | Physical devices | Wider Android/iPhone playback and installation acceptance remains necessary |
 | Synchronization | Shared timing and drift correction are implemented; exact 0 ms alignment is not guaranteed |

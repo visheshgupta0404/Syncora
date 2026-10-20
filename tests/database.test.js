@@ -58,6 +58,15 @@ beforeEach(async () => {
       "utf8",
     ),
   );
+  await pg.exec(
+    await readFile(
+      new URL(
+        "../supabase/migrations/20261021_inactivity_expiry.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
   await identity();
 });
 test("six-member room, seventh-user rejection, outsider RLS and blocked writes", async () => {
@@ -418,4 +427,76 @@ test("private presence is restricted to room members", async () => {
     ]),
     /row-level security/,
   );
+});
+
+test("room inactivity expiry extends on joins and accepted actions, not reads or retries", async () => {
+  let r = await open();
+  await pg.exec("reset role");
+  await pg.query(
+    "update rooms set expires_at=now()+interval '3 days' where id=$1",
+    [r.id],
+  );
+  await identity();
+  const read = (await pg.query("select * from rooms where id=$1", [r.id]))
+    .rows[0];
+  const joined = await open(r.code);
+  assert.ok(
+    new Date(joined.expires_at) - new Date(read.expires_at) > 3.9 * 86400000,
+  );
+  await identity(users[1]);
+  r = await open(r.code);
+  assert.equal(r.members.length, 2);
+  const command = randomUUID();
+  await pg.exec("reset role");
+  await pg.query(
+    "update rooms set expires_at=now()+interval '3 days' where id=$1",
+    [r.id],
+  );
+  await identity();
+  r = await action(
+    r,
+    "chat",
+    { name: "Guest", text: "Still using this room" },
+    command,
+  );
+  assert.ok(new Date(r.expires_at).getTime() - Date.now() > 6.9 * 86400000);
+  await pg.exec("reset role");
+  await pg.query(
+    "update rooms set expires_at=now()+interval '2 days' where id=$1",
+    [r.id],
+  );
+  await identity();
+  const before = (await pg.query("select * from rooms where id=$1", [r.id]))
+    .rows[0];
+  const retry = await action(
+    r,
+    "chat",
+    { name: "Guest", text: "Still using this room" },
+    command,
+  );
+  assert.equal(String(retry.expires_at), String(before.expires_at));
+  const stale = await action(r, "remove", { key: "missing" });
+  assert.equal(String(stale.expires_at), String(before.expires_at));
+  await identity(users[6]);
+  await assert.rejects(
+    action(r, "chat", { name: "Outsider", text: "Hi" }),
+    /access denied/,
+  );
+});
+
+test("inactivity migration is rerunnable and preserves room state and existing deadlines", async () => {
+  const r = await open();
+  await pg.exec("reset role");
+  const sql = await readFile(
+    new URL(
+      "../supabase/migrations/20261021_inactivity_expiry.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  await pg.exec(sql);
+  await pg.exec(sql);
+  const after = (await pg.query("select * from rooms where id=$1", [r.id]))
+    .rows[0];
+  assert.deepEqual(after, r);
 });

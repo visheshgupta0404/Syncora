@@ -97,7 +97,7 @@ export function useRoom(notify) {
           return;
         }
         actor.current = session.user;
-        const r = await readRoom(saved.id);
+        const r = await rpc("open_room", { invite: saved.code });
         if (active) {
           history.replaceState(null, "", location.pathname);
           accept(r, generation);

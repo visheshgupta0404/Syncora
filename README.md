@@ -73,7 +73,7 @@ Pushes to `main` deploy automatically. Keep local secrets in ignored environment
 
 Keep Syncora visible while listening. iPhone may need a tap to enable sound. YouTube buffering and device restrictions mean **exact 0 ms sync and background playback aren't guaranteed**.
 
-Rooms expire after **7 days**. Share invitations privately. Chat is visible to room members and the database administrator; it is not end-to-end encrypted. Videos play through YouTube's official embedded player.
+Rooms expire after **7 days of inactivity**. Joining or using room controls, the queue or chat renews this period. Share invitations privately. Chat is visible to room members and the database administrator; it is not end-to-end encrypted. Videos play through YouTube's official embedded player.
 
 ---
 

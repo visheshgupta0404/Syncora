@@ -22,6 +22,7 @@ Tests cover room capacity, database permissions, commands and retries, playlist 
 - Use Resync after returning from another app; other members should continue.
 - Send chat messages and confirm delivery to another member.
 - Reload and reconnect; confirm room recovery and seat release.
+- Confirm joins and accepted actions renew expiry to seven days ahead; passive refreshes do not.
 - Verify notification popups disappear after three seconds.
 - Test full-screen, installation and app updates on Android and iPhone.
 

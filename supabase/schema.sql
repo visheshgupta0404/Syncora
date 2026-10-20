@@ -70,9 +70,10 @@ begin
  if cardinality(r.members) >= 6 then raise exception 'This room is full (maximum 6 people)'; end if;
  if (select count(*) from rooms where auth.uid() = any(members) and expires_at > now()) >= 5
  then raise exception 'You already have five active rooms. Leave one first.'; end if;
- update rooms set members = array_append(members, auth.uid()), version = version + 1
- where id = r.id returning * into r;
+ r.members := array_append(r.members, auth.uid());
  end if;
+ update rooms set members = r.members, expires_at = now() + interval '7 days', version = version + 1
+ where id = r.id returning * into r;
  end if;
  return r;
 end $$;
@@ -154,7 +155,7 @@ begin
  select ord::integer - 1 into idx from jsonb_array_elements(q) with ordinality a(v, ord) where v->>'key' = s->'current'->>'key';
  if idx > 0 then q := jsonb_build_array(q->idx) || (q - idx); end if;
  s := jsonb_set(s, '{queue}', q);
- update rooms set state = s, version = version + 1,
+ update rooms set state = s, expires_at = now() + interval '7 days', version = version + 1,
  recent_commands = (array_prepend(receipt, recent_commands))[1:2048]
  where id = room_id returning * into r;
  return r;

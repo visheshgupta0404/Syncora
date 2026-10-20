@@ -36,6 +36,7 @@ The current deployment already has these migrations. For older installations, ap
 3. `20261019_rotating_playlist.sql`
 4. `20261019_scheduled_playback.sql`
 5. `20261019_short_room_codes.sql`
+6. `20261021_inactivity_expiry.sql` — renews expiry after joins and accepted actions; existing deadlines stay until the next use.
 
 Files are in [`supabase/migrations/`](../supabase/migrations/). Short-code migration retains legacy invitation aliases.
 
