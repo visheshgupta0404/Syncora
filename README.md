@@ -1,55 +1,86 @@
+<div align="center">
+
+<img src="public/icon.svg" width="88" height="88" alt="Syncora sound wave logo" />
+
 # Syncora
 
-Watch and listen together in a private room for up to **6 people**.
+### Different places. Same moment.
 
-**[Open Syncora](https://syncoramoments.pages.dev/)**
+Watch, listen and hang out together in a private room for **up to 6 people**.
 
-## Features
+**[▶ Launch Syncora](https://syncoramoments.pages.dev/)** &nbsp; · &nbsp; [Quick start](#your-room-in-three-steps) &nbsp; · &nbsp; [Run locally](#for-developers)
 
-- Private room codes, invite links and WhatsApp sharing.
-- YouTube search, synchronized playback, restart video and Resync.
-- Shared playlist with thumbnails, reorder, play next and automatic rotation.
-- Live chat, full-screen playback and installation on Android and iPhone.
+[![Checks](https://github.com/visheshgupta0404/Syncora/actions/workflows/verify.yml/badge.svg)](https://github.com/visheshgupta0404/Syncora/actions/workflows/verify.yml)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=61DAFB&labelColor=10141f)
+![Installable PWA](https://img.shields.io/badge/Installable-PWA-bdc6ff?style=flat&labelColor=10141f)
 
-## Local development
+</div>
 
-Use Node.js 24.
+---
+
+## ✦ Made for shared moments
+
+| Watch together | Make it your room |
+| :--- | :--- |
+| **Search YouTube** — find videos without leaving the app | **Private invites** — room codes, links and WhatsApp sharing |
+| **Shared controls** — play, pause, seek and restart | **Live conversation** — chat while you watch |
+| **Reusable playlist** — thumbnails, reorder and play next | **Take it with you** — install on Android or iPhone |
+| **Stay together** — catch up with Resync | **Know what's next** — current video and up-next labels |
+
+## Your room in three steps
+
+1. **Create** — [open Syncora](https://syncoramoments.pages.dev/), enter your name and create a room.
+2. **Invite** — share the room link or send a WhatsApp invitation.
+3. **Enjoy** — search for a video, add it to the queue and press play.
+
+**Install it:** Android → browser install option. iPhone → Safari → Share → Add to Home Screen.
+
+## For developers
+
+**React · Vite · Supabase · Cloudflare Pages**
+
+<details>
+<summary><strong>Open local setup & project guide</strong></summary>
+
+Use **Node.js 24**:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Choose **Explore the local demo** to try it without configuration. For shared rooms, copy `.env.example` to `.env.local` and follow the [setup guide](docs/DEPLOYMENT.md).
+Choose **Explore the local demo** to try the interface without configuration. For shared rooms, copy `.env.example` to `.env.local` and follow the [deployment guide](docs/DEPLOYMENT.md). YouTube search requires the server-side [API setup](docs/YOUTUBE-SEARCH.md).
 
 ```sh
 npm test
 npm run build
 ```
 
-## Project structure
+| Folder | Purpose |
+| :--- | :--- |
+| `src/` | UI components, room hooks and shared logic |
+| `functions/` | Server-side YouTube search |
+| `supabase/` | Schema, permissions and migrations |
+| `public/` | Icons and hosting configuration |
+| `tests/` · `scripts/` | Automated checks and maintenance tools |
+| `docs/` | Setup and verification guides |
 
-```text
-src/
-  components/    Player, search, queue, chat and installation
-  hooks/         Shared room lifecycle
-  lib/           Backend, playback logic and storage
-  main.jsx       App entry and layout
-  style.css      Responsive styles
-functions/api/   Server-side YouTube search
-supabase/        Database schema and migrations
-public/          App icons and hosting configuration
-scripts/         Configuration and live checks
-tests/           Automated tests
-docs/            Setup and verification guides
-```
+Pushes to `main` deploy automatically. Keep local secrets in ignored environment files.
 
-## Notes
+</details>
 
-Built with React, Vite, Supabase and Cloudflare Pages. Pushes to `main` deploy automatically.
+## A few things to know
 
-Keep the app visible for synchronization. iPhone may need a tap to enable sound; background playback and exact 0 ms synchronization are not guaranteed. Playback uses YouTube's official embedded player.
+Keep Syncora visible while listening. iPhone may need a tap to enable sound. YouTube buffering and device restrictions mean **exact 0 ms sync and background playback aren't guaranteed**.
 
-Rooms expire after 7 days. Invitations grant room access; chat is visible to members and the database administrator and is not end-to-end encrypted.
+Rooms expire after **7 days**. Share invitations privately. Chat is visible to room members and the database administrator; it is not end-to-end encrypted. Videos play through YouTube's official embedded player.
 
-[Deployment](docs/DEPLOYMENT.md) · [YouTube search setup](docs/YOUTUBE-SEARCH.md) · [Verification](docs/VERIFICATION.md)
+---
+
+<div align="center">
+
+**A little closer, wherever you are.**
+
+[Open Syncora](https://syncoramoments.pages.dev/) &nbsp; · &nbsp; [Deployment](docs/DEPLOYMENT.md) &nbsp; · &nbsp; [Verification](docs/VERIFICATION.md)
+
+</div>
