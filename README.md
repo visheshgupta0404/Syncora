@@ -81,6 +81,6 @@ Rooms expire after **7 days**. Share invitations privately. Chat is visible to r
 
 **A little closer, wherever you are.**
 
-[Open Syncora](https://syncoramoments.pages.dev/) &nbsp; · &nbsp; [Deployment](docs/DEPLOYMENT.md) &nbsp; · &nbsp; [Verification](docs/VERIFICATION.md)
+[Project overview](docs/PROJECT-OVERVIEW.md) &nbsp; · &nbsp; [Deployment](docs/DEPLOYMENT.md) &nbsp; · &nbsp; [Verification](docs/VERIFICATION.md)
 
 </div>
