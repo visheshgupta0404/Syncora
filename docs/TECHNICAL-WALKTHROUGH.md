@@ -305,6 +305,8 @@ CSS adapts the layout to screen width. Search, Queue and Conversation tabs reduc
 
 The lobby uses an original generated listening-lounge illustration, served as optimized local WebP assets in desktop and phone sizes. CSS supplies camera-like movement, independently floating snapshots and headphones, a rotating record, light ripples, particles and decorative audio bars. These bars are visual decoration, not analysis of YouTube audio. Desktop pointer movement and mobile scrolling adjust depth through requestAnimationFrame updates; listeners and pending frames are cleaned up. Pause, hidden-page and reduced-motion states stop motion. The scene unmounts inside rooms. No animation library or remote artwork requests are required.
 
+Optional lobby ambience uses the supplied Coffee Shop Warmth MP3 from local hosting. It is off by default and uses preload none; enabling it in a user gesture starts looping playback at a low gain. A Web Audio gain node provides volume, mute and short fades, independently of scene motion. Entering a room unmounts the component, pauses and clears the media source, cancels pending fades and closes its audio context. The MP3 is not included in the app-shell precache.
+
 Full screen uses the browser API where possible, otherwise it directs the user to YouTube's native control. PiP and separate plus/minus-ten-second buttons were removed. Native YouTube controls remain available.
 
 ### 5.11 Installation, updates and demo storage

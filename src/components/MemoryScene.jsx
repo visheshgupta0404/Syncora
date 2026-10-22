@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import LobbyAmbience from "./LobbyAmbience";
 
 export default function MemoryScene() {
   const scene = useRef(null);
@@ -150,6 +151,7 @@ export default function MemoryScene() {
           <span className="motion-static">Still moments</span>
         )}
       </div>
+      <LobbyAmbience />
     </div>
   );
 }

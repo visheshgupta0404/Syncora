@@ -2482,3 +2482,113 @@ button:hover:not(:disabled) {
     background-image: url("/art/shared-night-small.webp");
   }
 }
+
+/* User-enabled ambience; audio controls stay independent of scene motion. */
+.lobby-ambience {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  margin-top: 16px;
+  padding: 15px;
+  border: 1px solid #514760;
+  border-radius: 15px;
+  background: #1c2232e8;
+}
+.ambience-heading {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+.ambience-heading > span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: #39314d;
+  color: #e1c2e9;
+  font-size: 20px;
+}
+.ambience-heading strong {
+  display: block;
+  color: #e6d9ed;
+  font-size: 12px;
+  font-weight: 500;
+}
+.ambience-heading small {
+  display: block;
+  color: #aaa9c3;
+  font-size: 10px;
+  margin-top: 4px;
+}
+.ambience-toggle {
+  min-height: 44px;
+  padding: 9px 12px;
+  border-color: #766086;
+  color: #ebd6ee;
+  background: #3e304d;
+  font-size: 11px;
+}
+.ambience-toggle[aria-pressed="true"] {
+  background: #2c354d;
+  border-color: #667aa4;
+}
+.ambience-volume {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #424459;
+}
+.ambience-volume button {
+  min-width: 58px;
+  min-height: 44px;
+  font-size: 11px;
+  padding: 7px;
+}
+.ambience-volume label {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 10px;
+  color: #bcc1d8;
+  font-size: 11px;
+}
+.ambience-volume input {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  margin: 0;
+  padding: 0;
+  accent-color: #d5b9e8;
+}
+.ambience-volume > span {
+  color: #c7c1dc;
+  font-size: 10px;
+  min-width: 26px;
+}
+.ambience-status {
+  grid-column: 1 / -1;
+  color: #b4b6ce;
+  font-size: 10px;
+  line-height: 1.6;
+  margin: 0;
+}
+@media (max-width: 400px) {
+  .lobby-ambience {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 13px;
+  }
+  .ambience-toggle {
+    width: 100%;
+  }
+  .ambience-volume {
+    gap: 8px;
+  }
+  .ambience-volume label {
+    gap: 7px;
+  }
+}
