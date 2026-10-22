@@ -79,10 +79,12 @@ export default function YouTubeSearch({ dispatch, disabled, full, notify }) {
     }
   }
   return (
-    <details className="youtube-search" open>
-      <summary>
-        Search YouTube <span>Find a song or video</span>
-      </summary>
+    <section className="youtube-search" aria-labelledby="discover-heading">
+      <div className="panel-heading">
+        <span className="eyebrow">FIND YOUR NEXT FAVORITE</span>
+        <h2 id="discover-heading">What are we listening to?</h2>
+        <p>Search YouTube and add a little something for everyone.</p>
+      </div>
       <section className="search-content" aria-label="Search YouTube">
         <form onSubmit={search}>
           <label>
@@ -103,6 +105,13 @@ export default function YouTubeSearch({ dispatch, disabled, full, notify }) {
         <p className="search-status" role="status">
           {message}
         </p>
+        {!items.length && !message && !busy ? (
+          <div className="search-empty">
+            <span aria-hidden="true">♫</span>
+            <h3>A good moment starts with a song.</h3>
+            <p>Try an artist, a favorite track, or a video you love.</p>
+          </div>
+        ) : null}
         <div className="search-results" aria-busy={busy}>
           {items.map((video) => (
             <article key={video.id}>
@@ -147,6 +156,6 @@ export default function YouTubeSearch({ dispatch, disabled, full, notify }) {
           Results from YouTube · Searches are sent to YouTube.
         </small>
       </section>
-    </details>
+    </section>
   );
 }

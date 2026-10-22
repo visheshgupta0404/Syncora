@@ -82,7 +82,7 @@ function App() {
     const invite = parseInvite(code);
     if (!invite)
       return setNotice(
-        "Paste a 32-character room code or a Syncora invitation link.",
+        "Enter your room code (for example A1B2C-3D4E5) or paste an invitation link.",
       );
     await open(invite);
   }
@@ -112,18 +112,41 @@ function App() {
       </header>
       {!room ? (
         <main className="landing">
-          <span className="eyebrow">YOUR PRIVATE LISTENING ROOM</span>
-          <h1>
-            Different places.
-            <br />
-            <em>Same moment.</em>
-          </h1>
-          <p>
-            Press play on something you love.
-            <br />
-            Share the music, the conversation, and the quiet in between.
-          </p>
-          <section className="join panel">
+          <div className="landing-intro">
+            <span className="eyebrow">YOUR PRIVATE LISTENING ROOM</span>
+            <h1>
+              Different places.
+              <br />
+              <em>Same moment.</em>
+            </h1>
+            <p>
+              Press play on something you love.
+              <br />
+              Share the music, the conversation, and the quiet in between.
+            </p>
+            <div className="landing-benefits" aria-label="How Syncora works">
+              <span>
+                <b>01</b> Create your space
+              </span>
+              <span>
+                <b>02</b> Bring your people
+              </span>
+              <span>
+                <b>03</b> Press play together
+              </span>
+            </div>
+            <div className="features">
+              <span>↔ Shared controls</span>
+              <span>♫ Shared playlist</span>
+              <span>♡ Up to {ROOM_CAPACITY} people</span>
+            </div>
+          </div>
+          <section className="join panel" aria-labelledby="join-heading">
+            <div className="join-heading">
+              <span className="eyebrow">GOOD COMPANY STARTS HERE</span>
+              <h2 id="join-heading">Make room for a moment.</h2>
+              <p>Start something together, or join your people.</p>
+            </div>
             <label>
               Your name
               <input
@@ -157,7 +180,7 @@ function App() {
                   maxLength={2048}
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  placeholder="Paste your invitation"
+                  placeholder="A1B2C-3D4E5 or invitation link"
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck="false"
@@ -185,11 +208,6 @@ function App() {
                 : "Demo available · shared rooms need Supabase setup"}
             </small>
           </section>
-          <div className="features">
-            <span>↔ Shared controls</span>
-            <span>♫ A queue for everyone</span>
-            <span>♡ Up to {ROOM_CAPACITY} people</span>
-          </div>
         </main>
       ) : (
         <main>
@@ -274,7 +292,7 @@ function App() {
                 ) : null}
               </div>
             </section>
-            <aside className="panel">
+            <aside className="panel room-sidebar">
               <nav aria-label="Room panels">
                 <button
                   aria-pressed={tab === "search"}
@@ -326,8 +344,24 @@ function App() {
           </div>
         </main>
       )}
-      <dialog ref={inviteDialog} aria-labelledby="invite-title">
-        <h2 id="invite-title">Invite your people</h2>
+      <dialog
+        ref={inviteDialog}
+        aria-labelledby="invite-title"
+        className="invite-dialog"
+      >
+        <div className="invite-heading">
+          <div>
+            <span className="eyebrow">BETTER WITH YOUR PEOPLE</span>
+            <h2 id="invite-title">Save them a seat.</h2>
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close invitation"
+            onClick={() => inviteDialog.current.close()}
+          >
+            ×
+          </button>
+        </div>
         <p>
           Up to {ROOM_CAPACITY} people, including you, can join this room.
           Anyone with this invitation can claim an available seat. Share it
@@ -361,7 +395,6 @@ function App() {
           >
             Share on WhatsApp ↗
           </a>
-          <button onClick={() => inviteDialog.current.close()}>Close</button>
         </div>
         <small>
           Back to lobby keeps your seat. Release my seat lets someone else join;
