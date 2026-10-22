@@ -84,16 +84,11 @@ export default function LobbyAmbience() {
       >
         <span aria-hidden="true">♫</span>
       </button>
-      <span className="scene-music-hint" role="status">
-        {error ||
-          (blocked
-            ? "Tap for sound"
-            : muted
-              ? "Sound off"
-              : playing
-                ? "Sound on"
-                : "Starting music…")}
-      </span>
+      {error || blocked || !playing ? (
+        <span className="scene-music-hint" role="status">
+          {error || (blocked ? "Tap for sound" : "Starting music…")}
+        </span>
+      ) : null}
     </div>
   );
 }
