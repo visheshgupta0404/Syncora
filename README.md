@@ -81,6 +81,6 @@ Rooms expire after **7 days of inactivity**. Joining or using room controls, the
 
 **A little closer, wherever you are.**
 
-[Project overview](docs/PROJECT-OVERVIEW.md) &nbsp; · &nbsp; [Deployment](docs/DEPLOYMENT.md) &nbsp; · &nbsp; [Verification](docs/VERIFICATION.md)
+[Project overview](docs/PROJECT-OVERVIEW.md) &nbsp; · &nbsp; [Full walkthrough](docs/TECHNICAL-WALKTHROUGH.md) &nbsp; · &nbsp; [Deployment](docs/DEPLOYMENT.md) &nbsp; · &nbsp; [Verification](docs/VERIFICATION.md)
 
 </div>

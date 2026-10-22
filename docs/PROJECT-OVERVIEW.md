@@ -87,3 +87,5 @@ Changes are checked locally, committed to GitHub's `main` branch and automatical
 The next priority is a practical acceptance session using real Android and iPhone devices: join the same room, test shared playback and chat, switch apps, return and Resync, and verify installation. Further features should follow observed user needs and service capacity.
 
 **Delivery assessment:** Syncora is a deployed application ready for small-group use and device acceptance testing. Its main remaining constraints come from mobile playback behavior, YouTube restrictions and free-service limits.
+
+For implementation details and flowcharts, see the [complete project walkthrough](TECHNICAL-WALKTHROUGH.md).
