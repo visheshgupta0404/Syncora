@@ -55,7 +55,10 @@ function App() {
     [hasSession, setHasSession] = useState(false);
   const [tab, setTab] = useState("search");
   const inviteDialog = useRef(null),
-    helpDialog = useRef(null);
+    helpDialog = useRef(null),
+    releaseDialog = useRef(null),
+    sidebar = useRef(null),
+    watchPanel = useRef(null);
   const session = useRoom(setNotice),
     { room, state, busy, status, online, offset, presence, dispatch } = session;
   const demo = room?.id === "demo",
@@ -71,6 +74,16 @@ function App() {
     } = db.auth.onAuthStateChange((_event, s) => setHasSession(!!s));
     return () => subscription.unsubscribe();
   }, []);
+  useEffect(() => {
+    releaseDialog.current?.close();
+  }, [room?.id]);
+  function selectPanel(next) {
+    setTab(next);
+    if (matchMedia("(max-width: 700px)").matches) {
+      sidebar.current?.focus({ preventScroll: true });
+      sidebar.current?.scrollIntoView({ block: "start" });
+    }
+  }
   const verificationRequired = !!captchaSiteKey && !hasSession;
   async function open(invite) {
     await session.open(invite, token || undefined);
@@ -100,6 +113,9 @@ function App() {
       : "";
   return (
     <div className="shell">
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
       <header>
         <a className="brand" href="/" aria-label="Syncora home">
           ≋{" "}
@@ -111,7 +127,7 @@ function App() {
         <Install notify={setNotice} />
       </header>
       {!room ? (
-        <main className="landing">
+        <main className="landing" id="main-content" tabIndex={-1}>
           <div className="landing-intro">
             <span className="eyebrow">YOUR PRIVATE LISTENING ROOM</span>
             <h1>
@@ -210,7 +226,7 @@ function App() {
           </section>
         </main>
       ) : (
-        <main>
+        <main id="main-content" tabIndex={-1}>
           <div className="roomhead">
             <div>
               <span className="eyebrow">
@@ -219,12 +235,39 @@ function App() {
               <h1>
                 A moment, shared<span className="dot">.</span>
               </h1>
-              <p role="status">
-                {status}
-                {!demo
-                  ? ` · ${room.members.length}/${ROOM_CAPACITY} seats · ${presence} device${presence === 1 ? "" : "s"} online`
-                  : ""}
-              </p>
+              <p role="status">{status}</p>
+              {!demo ? (
+                <div
+                  className="participants"
+                  aria-label={`${room.members.length} of ${ROOM_CAPACITY} seats occupied; ${presence} online`}
+                >
+                  <span
+                    className="participant-self"
+                    aria-label={`Listening as ${name || "You"}`}
+                  >
+                    {(name.trim() || "Y").slice(0, 1).toUpperCase()}
+                  </span>
+                  <div className="participant-seats" aria-hidden="true">
+                    {Array.from({ length: ROOM_CAPACITY }, (_, i) => (
+                      <span
+                        key={i}
+                        className={i < room.members.length ? "occupied" : ""}
+                      >
+                        {i < room.members.length ? "●" : "○"}
+                      </span>
+                    ))}
+                  </div>
+                  <span>
+                    {room.members.length}/{ROOM_CAPACITY} seats{" "}
+                    <span
+                      className={
+                        online ? "connection-dot" : "connection-dot offline"
+                      }
+                    />{" "}
+                    {presence} online
+                  </span>
+                </div>
+              ) : null}
             </div>
             <div className="room-actions">
               {!demo ? (
@@ -238,7 +281,7 @@ function App() {
               {!demo ? (
                 <button
                   disabled={busy || !online}
-                  onClick={() => session.leave(true)}
+                  onClick={() => releaseDialog.current.showModal()}
                 >
                   Release my seat
                 </button>
@@ -252,7 +295,12 @@ function App() {
             </div>
           ) : null}
           <div className="workspace">
-            <section className="watch panel">
+            <section
+              className="watch panel"
+              ref={watchPanel}
+              tabIndex={-1}
+              aria-label="Video and playback controls"
+            >
               <div className="sectiontitle">
                 <span>NOW PLAYING</span>
                 <span>YOUTUBE</span>
@@ -292,28 +340,44 @@ function App() {
                 ) : null}
               </div>
             </section>
-            <aside className="panel room-sidebar">
+            <aside
+              className="panel room-sidebar"
+              ref={sidebar}
+              tabIndex={-1}
+              aria-label="Search queue and conversation"
+            >
               <nav aria-label="Room panels">
+                <button
+                  className="watch-shortcut"
+                  onClick={() => {
+                    watchPanel.current?.focus({ preventScroll: true });
+                    watchPanel.current?.scrollIntoView({ block: "start" });
+                  }}
+                >
+                  Watch
+                </button>
                 <button
                   aria-pressed={tab === "search"}
                   className={tab === "search" ? "selected" : ""}
-                  onClick={() => setTab("search")}
+                  onClick={() => selectPanel("search")}
                 >
                   Search
                 </button>
                 <button
                   aria-pressed={tab === "queue"}
                   className={tab === "queue" ? "selected" : ""}
-                  onClick={() => setTab("queue")}
+                  onClick={() => selectPanel("queue")}
                 >
                   Queue <b>{state.queue.length}</b>
                 </button>
                 <button
                   aria-pressed={tab === "chat"}
                   className={tab === "chat" ? "selected" : ""}
-                  onClick={() => setTab("chat")}
+                  onClick={() => selectPanel("chat")}
                 >
-                  Conversation <b>{state.messages.length}</b>
+                  <span className="desktop-label">Conversation</span>
+                  <span className="mobile-label">Chat</span>{" "}
+                  <b>{state.messages.length}</b>
                 </button>
               </nav>
               <div hidden={tab !== "search"}>
@@ -400,6 +464,36 @@ function App() {
           Back to lobby keeps your seat. Release my seat lets someone else join;
           the room disappears when its last member leaves.
         </small>
+      </dialog>
+      <dialog
+        ref={releaseDialog}
+        aria-labelledby="release-title"
+        className="release-dialog"
+      >
+        <span className="eyebrow">BEFORE YOU GO</span>
+        <h2 id="release-title">Release your seat?</h2>
+        <p>
+          {room?.members.length === 1
+            ? "You are the last member. Releasing your seat will permanently delete this room, its playlist and conversation."
+            : "Your seat will become available to someone else. You can rejoin with the invitation if there is space."}
+        </p>
+        <p>Just taking a break? Back to lobby keeps your seat.</p>
+        <div className="dialog-actions">
+          <button
+            autoFocus
+            disabled={busy}
+            onClick={() => releaseDialog.current.close()}
+          >
+            Keep my seat
+          </button>
+          <button
+            className="danger-button"
+            disabled={busy || !online}
+            onClick={() => session.leave(true)}
+          >
+            {busy ? "Releasing…" : "Yes, release my seat"}
+          </button>
+        </div>
       </dialog>
       <dialog ref={helpDialog} aria-labelledby="help-title">
         <h2 id="help-title">A few things to know</h2>

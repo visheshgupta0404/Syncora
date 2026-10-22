@@ -271,7 +271,7 @@ Private presence counts online identities. Membership is different: a closed bro
 
 Realtime is the primary update path. A visible app also reads the room every 15 seconds as recovery and refreshes after subscription, visibility changes and network return. These passive reads do not renew expiry.
 
-Back to lobby preserves the saved room reference and membership. Release my seat calls `leave_room` and removes membership. The last release deletes the room and its queue/chat. Closing the tab alone does not release a seat.
+Back to lobby preserves the saved room reference and membership. Release my seat first opens a confirmation, warning explicitly when the last seat release will delete the room. Keep my seat is focused by default; confirmed release calls `leave_room` and removes membership. The last release deletes the room and its queue/chat. Closing the tab alone does not release a seat.
 
 ### 5.9 Seven-day inactivity expiry
 

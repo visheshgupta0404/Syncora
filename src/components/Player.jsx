@@ -53,7 +53,13 @@ export default function Player({
   const [time, setTime] = useState(0),
     [duration, setDuration] = useState(0),
     [draft, setDraft] = useState(null),
-    [buffering, setBuffering] = useState(false);
+    [buffering, setBuffering] = useState(false),
+    [resyncing, setResyncing] = useState(false);
+  useEffect(() => {
+    if (!resyncing) return;
+    const timer = setTimeout(() => setResyncing(false), 6000);
+    return () => clearTimeout(timer);
+  }, [resyncing]);
   const key = state.current?.key;
   const scheduled = Date.now() + offset < state.at;
   function suppress() {
@@ -204,6 +210,7 @@ export default function Player({
     if (!ready) return;
     const p = player.current;
     resyncUntil.current = 0;
+    setResyncing(false);
     suppress();
     setDraft(null);
     setError("");
@@ -414,12 +421,6 @@ export default function Player({
           {state.playing ? "Ⅱ Pause" : "▶ Play"}
         </button>
         <button
-          disabled={!key || !ready || disabled || scheduled}
-          onClick={() => seek(0)}
-        >
-          ↺ Restart video
-        </button>
-        <button
           disabled={(!key && !state.queue.length) || disabled || scheduled}
           onClick={() =>
             onAction({
@@ -431,29 +432,11 @@ export default function Player({
           {key ? "Next ↦" : "Start playlist ▶"}
         </button>
         <button
-          disabled={!key || disabled || scheduled}
-          onClick={() =>
-            onAction({ type: "previous", payload: { key, at: state.at } })
-          }
-        >
-          ↤ Previous
-        </button>
-        <button
-          disabled={!state.queue.length || disabled || scheduled}
-          onClick={() =>
-            onAction({
-              type: "restart",
-              payload: { key: key || null, at: state.at },
-            })
-          }
-        >
-          Restart playlist
-        </button>
-        <button
-          disabled={!ready || !key || scheduled}
+          disabled={!ready || !key || scheduled || resyncing}
           onClick={() => {
             suppress();
             resyncUntil.current = Date.now() + 6000;
+            setResyncing(true);
             setDraft(null);
             const pos = targetPosition(state, Date.now() + offset);
             player.current.seekTo(pos, true);
@@ -464,10 +447,48 @@ export default function Player({
             );
           }}
         >
-          Resync ↔
+          {resyncing ? "Resyncing…" : "Resync ↔"}
         </button>
-        <button onClick={fullScreen}>⛶ Full screen</button>
+        <details className="more-controls">
+          <summary>More controls</summary>
+          <div className="more-controls-list">
+            <button
+              disabled={!key || !ready || disabled || scheduled}
+              onClick={() => seek(0)}
+            >
+              ↺ Restart video
+            </button>
+            <button
+              disabled={!key || disabled || scheduled}
+              onClick={() =>
+                onAction({ type: "previous", payload: { key, at: state.at } })
+              }
+            >
+              ↤ Previous
+            </button>
+            <button
+              disabled={!state.queue.length || disabled || scheduled}
+              onClick={() =>
+                onAction({
+                  type: "restart",
+                  payload: { key: key || null, at: state.at },
+                })
+              }
+            >
+              Restart playlist
+            </button>
+            <button onClick={fullScreen}>⛶ Full screen</button>
+          </div>
+        </details>
       </div>
+      {resyncing ? (
+        <p className="recovery-status" role="status">
+          Catching up to the room.{" "}
+          {buffering
+            ? "Waiting for YouTube to buffer…"
+            : "Checking local playback…"}
+        </p>
+      ) : null}
       <small className="muted">
         Shared controls use a 1.5-second sync window, including video changes.
         Buffering may still cause drift.

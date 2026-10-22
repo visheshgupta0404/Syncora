@@ -103,8 +103,18 @@ export default function YouTubeSearch({ dispatch, disabled, full, notify }) {
           </button>
         </form>
         <p className="search-status" role="status">
-          {message}
+          {busy ? "Searching YouTube…" : message}
         </p>
+        {busy ? (
+          <div className="search-loading" aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <div key={i}>
+                <span />
+                <span />
+              </div>
+            ))}
+          </div>
+        ) : null}
         {!items.length && !message && !busy ? (
           <div className="search-empty">
             <span aria-hidden="true">♫</span>
@@ -141,10 +151,14 @@ export default function YouTubeSearch({ dispatch, disabled, full, notify }) {
                   added.includes(video.id)
                 }
                 onClick={() => add(video)}
-                aria-label={`Add ${video.title} to queue`}
+                aria-label={
+                  added.includes(video.id)
+                    ? `${video.title} added to queue`
+                    : `Add ${video.title} to queue`
+                }
               >
                 {added.includes(video.id)
-                  ? "✓"
+                  ? "✓ Added"
                   : adding === video.id
                     ? "Adding…"
                     : "+ Add"}

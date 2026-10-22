@@ -29,7 +29,7 @@ export default function Queue({ queue, currentKey, dispatch, disabled }) {
                   loading="lazy"
                   referrerPolicy="no-referrer"
                 />
-                <strong>
+                <strong title={v.title}>
                   {v.key === currentKey ? (
                     <small className="now-playing">▶ Now playing</small>
                   ) : null}
