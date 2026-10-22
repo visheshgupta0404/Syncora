@@ -2246,10 +2246,6 @@ button:hover:not(:disabled) {
   font-size: 13px;
   letter-spacing: 0.1px;
 }
-.cinema-bottom > span:last-child {
-  font-size: 22px;
-  color: #d7baf3;
-}
 .memory-caption {
   display: flex;
   align-items: center;
@@ -2483,112 +2479,76 @@ button:hover:not(:disabled) {
   }
 }
 
-/* User-enabled ambience; audio controls stay independent of scene motion. */
-.lobby-ambience {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px 12px;
-  margin-top: 16px;
-  padding: 15px;
-  border: 1px solid #514760;
-  border-radius: 15px;
-  background: #1c2232e8;
+/* Accessible music toggle anchored to the artwork's music symbol. */
+.scene-audio-control {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 1.52;
+  pointer-events: none;
+  z-index: 5;
 }
-.ambience-heading {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  min-width: 0;
-}
-.ambience-heading > span {
+.scene-music-button {
+  position: absolute;
+  right: 12px;
+  bottom: 6px;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border-radius: 11px;
-  background: #39314d;
-  color: #e1c2e9;
-  font-size: 20px;
-}
-.ambience-heading strong {
-  display: block;
-  color: #e6d9ed;
-  font-size: 12px;
-  font-weight: 500;
-}
-.ambience-heading small {
-  display: block;
-  color: #aaa9c3;
-  font-size: 10px;
-  margin-top: 4px;
-}
-.ambience-toggle {
-  min-height: 44px;
-  padding: 9px 12px;
-  border-color: #766086;
-  color: #ebd6ee;
-  background: #3e304d;
-  font-size: 11px;
-}
-.ambience-toggle[aria-pressed="true"] {
-  background: #2c354d;
-  border-color: #667aa4;
-}
-.ambience-volume {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-top: 8px;
-  border-top: 1px solid #424459;
-}
-.ambience-volume button {
-  min-width: 58px;
-  min-height: 44px;
-  font-size: 11px;
-  padding: 7px;
-}
-.ambience-volume label {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  gap: 10px;
-  color: #bcc1d8;
-  font-size: 11px;
-}
-.ambience-volume input {
-  flex: 1;
-  min-width: 0;
-  min-height: 32px;
-  margin: 0;
+  width: 46px;
+  height: 46px;
   padding: 0;
-  accent-color: #d5b9e8;
+  border: 1px solid #a98dbb88;
+  border-radius: 50%;
+  background: #191a30d9;
+  color: #ead4ff;
+  box-shadow: 0 4px 20px #0006;
+  pointer-events: auto;
 }
-.ambience-volume > span {
-  color: #c7c1dc;
+.scene-music-button > span {
+  font-size: 26px;
+  line-height: 1;
+}
+.scene-music-button.is-silent::after {
+  content: "";
+  position: absolute;
+  width: 32px;
+  height: 3px;
+  border-radius: 3px;
+  background: #f3c9dd;
+  box-shadow: 0 0 0 2px #191a30;
+  transform: rotate(-45deg);
+}
+.scene-music-button:hover {
+  background: #463553;
+}
+.scene-music-button:focus-visible {
+  outline: 2px solid #eee2ff;
+  outline-offset: 4px;
+}
+.scene-music-hint {
+  position: absolute;
+  right: 10px;
+  bottom: 58px;
+  max-width: 160px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: #101522dc;
+  color: #e1d4f1;
   font-size: 10px;
-  min-width: 26px;
+  line-height: 1.4;
+  text-align: right;
 }
-.ambience-status {
-  grid-column: 1 / -1;
-  color: #b4b6ce;
-  font-size: 10px;
-  line-height: 1.6;
-  margin: 0;
-}
-@media (max-width: 400px) {
-  .lobby-ambience {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 13px;
+@media (max-width: 700px) {
+  .scene-audio-control {
+    aspect-ratio: 1.32;
   }
-  .ambience-toggle {
-    width: 100%;
+  .scene-music-button {
+    right: 9px;
+    bottom: 3px;
   }
-  .ambience-volume {
-    gap: 8px;
-  }
-  .ambience-volume label {
-    gap: 7px;
+  .scene-music-hint {
+    right: 8px;
+    bottom: 55px;
   }
 }

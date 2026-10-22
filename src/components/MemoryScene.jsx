@@ -130,9 +130,9 @@ export default function MemoryScene() {
         </div>
         <div className="cinema-bottom">
           <span>Make this a memory.</span>
-          <span>♫</span>
         </div>
       </div>
+      <LobbyAmbience />
       <div className="memory-caption">
         <span>A little closer, wherever you are.</span>
         {!reduced ? (
@@ -151,7 +151,6 @@ export default function MemoryScene() {
           <span className="motion-static">Still moments</span>
         )}
       </div>
-      <LobbyAmbience />
     </div>
   );
 }
