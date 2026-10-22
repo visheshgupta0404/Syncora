@@ -98,7 +98,15 @@ export default function MemoryScene() {
           ))}
         </div>
         <div className="scene-symbol symbol-headphones">🎧</div>
-        <div className="scene-symbol symbol-screen">🖥️</div>
+        <div className="scene-symbol symbol-screen">
+          <img
+            src="/art/movie-night.webp"
+            alt=""
+            width="480"
+            height="320"
+            loading="lazy"
+          />
+        </div>
         <div className="scene-symbol symbol-earphones">
           <svg viewBox="0 0 48 58" fill="none" focusable="false">
             <path

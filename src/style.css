@@ -2423,57 +2423,89 @@ button:hover:not(:disabled) {
   }
 }
 
-/* Clean foreground symbols: one illustration, no repeated photo layers. */
+/* Generous listening symbols and a distinct movie-night illustration. */
 .scene-symbol {
   position: absolute;
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 58px;
   z-index: 2;
   pointer-events: none;
-  font-size: 37px;
-  filter: drop-shadow(0 6px 10px #0006);
+  filter: drop-shadow(0 8px 13px #0007);
 }
 .symbol-headphones {
-  top: 67px;
-  left: 12px;
+  top: -12px;
+  left: -8px;
+  width: 86px;
+  height: 92px;
+  font-size: 76px;
+  line-height: 1;
+  font-family:
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   animation: lounge-headphones 6s ease-in-out infinite;
 }
 .symbol-screen {
-  top: 14px;
-  right: 15px;
+  top: 16px;
+  right: 16px;
+  width: 154px;
+  aspect-ratio: 1.5;
+  rotate: 6deg;
+  border: 3px solid #ccb9d4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #222235;
+  box-shadow: 0 12px 28px #0006;
   animation: lounge-memory-two 8s ease-in-out infinite;
+}
+.symbol-screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .symbol-earphones {
   bottom: 42px;
-  left: 16px;
+  left: 17px;
+  width: 65px;
+  height: 78px;
   animation: lounge-memory-one 7s ease-in-out infinite;
 }
 .symbol-earphones svg {
-  width: 39px;
-  height: 48px;
+  width: 57px;
+  height: 69px;
+  filter: drop-shadow(0 2px 2px #816d9f);
 }
 @media (max-width: 700px) {
-  .scene-symbol {
-    width: 40px;
-    height: 47px;
-    font-size: 29px;
-  }
   .symbol-headphones {
-    left: 8px;
-    top: 48px;
+    width: 64px;
+    height: 70px;
+    font-size: 58px;
+    left: -8px;
+    top: -8px;
   }
   .symbol-screen {
-    right: 8px;
-    top: 10px;
+    width: 110px;
+    right: 11px;
+    top: 13px;
+    border-width: 2px;
+    border-radius: 9px;
   }
   .symbol-earphones {
-    left: 9px;
-    bottom: 36px;
+    left: 11px;
+    bottom: 38px;
+    width: 49px;
+    height: 60px;
   }
   .symbol-earphones svg {
-    width: 30px;
-    height: 39px;
+    width: 43px;
+    height: 53px;
+  }
+}
+
+.cinema-tag {
+  left: 86px;
+}
+@media (max-width: 700px) {
+  .cinema-tag {
+    display: none;
   }
 }
