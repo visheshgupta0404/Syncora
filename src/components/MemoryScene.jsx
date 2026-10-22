@@ -97,18 +97,25 @@ export default function MemoryScene() {
             />
           ))}
         </div>
-        <div className="memory-snapshot snapshot-one">
-          <div />
-          <span>the nights we keep.</span>
-        </div>
-        <div className="memory-snapshot snapshot-two">
-          <div />
-          <span>our kind of together.</span>
-        </div>
-        <div className="floating-headphones">
-          <span />
-          <i />
-          <b />
+        <div className="scene-symbol symbol-headphones">🎧</div>
+        <div className="scene-symbol symbol-screen">🖥️</div>
+        <div className="scene-symbol symbol-earphones">
+          <svg viewBox="0 0 48 58" fill="none" focusable="false">
+            <path
+              d="M13 21V36C13 44 24 40 24 48V55M35 21V36C35 44 24 40 24 48"
+              stroke="#ead6ff"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <rect x="7" y="6" width="12" height="17" rx="6" fill="#ead6ff" />
+            <rect x="29" y="6" width="12" height="17" rx="6" fill="#ead6ff" />
+            <path
+              d="M10 11H15M32 11H37"
+              stroke="#8d79ab"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
         </div>
         <div className="floating-vinyl">
           <span />

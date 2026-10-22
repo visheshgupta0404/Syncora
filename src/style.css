@@ -1958,18 +1958,7 @@ button:hover:not(:disabled) {
   gap: clamp(32px, 5vw, 76px);
   padding-block: 42px;
 }
-.landing::before {
-  content: "";
-  position: absolute;
-  inset: -50px -4vw 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    linear-gradient(90deg, #10141f80, #10141ff0 78%),
-    url("/art/shared-night.webp") center / cover;
-  opacity: 0.16;
-  mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent);
-}
+
 .landing h1 {
   font-size: clamp(44px, 4.7vw, 66px);
   margin-block: 18px;
@@ -2101,85 +2090,6 @@ button:hover:not(:disabled) {
   top: var(--spark-y);
   animation: lounge-sparks 7s ease-in-out infinite;
   animation-delay: calc(var(--i) * -0.7s);
-}
-.memory-snapshot {
-  position: absolute;
-  width: 103px;
-  padding: 6px 6px 8px;
-  background: #e9dfe6;
-  box-shadow: 0 15px 28px #0005;
-  border-radius: 5px;
-  z-index: 2;
-  pointer-events: none;
-}
-.memory-snapshot > div {
-  height: 70px;
-  background: url("/art/shared-night.webp") center / 280% auto;
-  border-radius: 2px;
-}
-.memory-snapshot > span {
-  display: block;
-  margin-top: 6px;
-  text-align: center;
-  font-size: 7px;
-  color: #67546a;
-  letter-spacing: 0.2px;
-}
-.snapshot-one {
-  left: -15px;
-  bottom: 30px;
-  rotate: -12deg;
-  animation: lounge-memory-one 7s ease-in-out infinite;
-}
-.snapshot-one > div {
-  background-position: 8% 46%;
-}
-.snapshot-two {
-  right: 10px;
-  top: -12px;
-  rotate: 11deg;
-  animation: lounge-memory-two 8s ease-in-out infinite;
-}
-.snapshot-two > div {
-  background-position: 95% 43%;
-}
-.floating-headphones {
-  position: absolute;
-  top: 60px;
-  left: -15px;
-  width: 55px;
-  height: 64px;
-  rotate: -18deg;
-  z-index: 3;
-  filter: drop-shadow(0 8px 12px #0006);
-  animation: lounge-headphones 6s ease-in-out infinite;
-  pointer-events: none;
-}
-.floating-headphones > span {
-  position: absolute;
-  inset: 0 5px 13px;
-  border: 7px solid #c6b3fa;
-  border-bottom: 0;
-  border-radius: 50% 50% 0 0;
-  background: transparent;
-}
-.floating-headphones > i,
-.floating-headphones > b {
-  position: absolute;
-  width: 15px;
-  height: 27px;
-  background: linear-gradient(90deg, #c5a3e7, #e1c8f3);
-  top: 29px;
-  border: 2px solid #9b7fbc;
-  border-radius: 7px;
-  padding: 0;
-  margin: 0;
-}
-.floating-headphones > i {
-  left: 1px;
-}
-.floating-headphones > b {
-  right: 1px;
 }
 .floating-vinyl {
   position: absolute;
@@ -2371,39 +2281,6 @@ button:hover:not(:disabled) {
     letter-spacing: 0.7px;
     padding: 7px 8px;
   }
-  .memory-snapshot {
-    width: 73px;
-    padding: 4px 4px 6px;
-  }
-  .memory-snapshot > div {
-    height: 50px;
-  }
-  .memory-snapshot > span {
-    font-size: 5px;
-  }
-  .snapshot-one {
-    left: -6px;
-    bottom: 34px;
-  }
-  .snapshot-two {
-    right: 3px;
-    top: -14px;
-  }
-  .floating-headphones {
-    width: 43px;
-    height: 52px;
-    left: -4px;
-    top: 50px;
-  }
-  .floating-headphones > span {
-    border-width: 5px;
-  }
-  .floating-headphones > i,
-  .floating-headphones > b {
-    width: 12px;
-    height: 23px;
-    top: 23px;
-  }
   .floating-vinyl {
     width: 51px;
     height: 51px;
@@ -2469,13 +2346,6 @@ button:hover:not(:disabled) {
       opacity: 1;
       transform: translateY(0);
     }
-  }
-}
-
-@media (max-width: 700px) {
-  .landing::before,
-  .memory-snapshot > div {
-    background-image: url("/art/shared-night-small.webp");
   }
 }
 
@@ -2550,5 +2420,60 @@ button:hover:not(:disabled) {
   .scene-music-hint {
     right: 8px;
     bottom: 55px;
+  }
+}
+
+/* Clean foreground symbols: one illustration, no repeated photo layers. */
+.scene-symbol {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 58px;
+  z-index: 2;
+  pointer-events: none;
+  font-size: 37px;
+  filter: drop-shadow(0 6px 10px #0006);
+}
+.symbol-headphones {
+  top: 67px;
+  left: 12px;
+  animation: lounge-headphones 6s ease-in-out infinite;
+}
+.symbol-screen {
+  top: 14px;
+  right: 15px;
+  animation: lounge-memory-two 8s ease-in-out infinite;
+}
+.symbol-earphones {
+  bottom: 42px;
+  left: 16px;
+  animation: lounge-memory-one 7s ease-in-out infinite;
+}
+.symbol-earphones svg {
+  width: 39px;
+  height: 48px;
+}
+@media (max-width: 700px) {
+  .scene-symbol {
+    width: 40px;
+    height: 47px;
+    font-size: 29px;
+  }
+  .symbol-headphones {
+    left: 8px;
+    top: 48px;
+  }
+  .symbol-screen {
+    right: 8px;
+    top: 10px;
+  }
+  .symbol-earphones {
+    left: 9px;
+    bottom: 36px;
+  }
+  .symbol-earphones svg {
+    width: 30px;
+    height: 39px;
   }
 }
