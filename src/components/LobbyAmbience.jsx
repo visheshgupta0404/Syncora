@@ -7,7 +7,7 @@ export default function LobbyAmbience() {
   const generation = useRef(0);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [volume, setVolume] = useState(18);
+  const [volume, setVolume] = useState(50);
   const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
 
@@ -125,7 +125,7 @@ export default function LobbyAmbience() {
             <input
               type="range"
               min="0"
-              max="40"
+              max="100"
               step="1"
               value={volume}
               onChange={(event) => setVolume(Number(event.target.value))}
