@@ -303,6 +303,8 @@ Access ends at expiry, but physical deletion happens during successful room-open
 
 CSS adapts the layout to screen width. Search, Queue and Conversation tabs reduce clutter. Notifications clear after three seconds; a new notice restarts the timer, and manual dismissal remains available.
 
+The lobby includes a local SVG illustration of two headphone-wearing listeners in memory cards. CSS animates the cards, heart and sound wave; a pause/resume control stops decorative motion. System reduced-motion preferences disable animation and use a still scene. Smaller decorative animations are disabled on phones, and the illustration unmounts inside rooms. No animation library or remote artwork is required.
+
 Full screen uses the browser API where possible, otherwise it directs the user to YouTube's native control. PiP and separate plus/minus-ten-second buttons were removed. Native YouTube controls remain available.
 
 ### 5.11 Installation, updates and demo storage

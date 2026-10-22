@@ -16,6 +16,7 @@ import AddVideos from "./components/AddVideos";
 import Chat from "./components/Chat";
 import Captcha from "./components/Captcha";
 import Install from "./components/Install";
+import MemoryScene from "./components/MemoryScene";
 import "./style.css";
 
 class ErrorBoundary extends Component {
@@ -140,17 +141,7 @@ function App() {
               <br />
               Share the music, the conversation, and the quiet in between.
             </p>
-            <div className="landing-benefits" aria-label="How Syncora works">
-              <span>
-                <b>01</b> Create your space
-              </span>
-              <span>
-                <b>02</b> Bring your people
-              </span>
-              <span>
-                <b>03</b> Press play together
-              </span>
-            </div>
+            <MemoryScene />
             <div className="features">
               <span>↔ Shared controls</span>
               <span>♫ Shared playlist</span>

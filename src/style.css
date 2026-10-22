@@ -1950,3 +1950,250 @@ button:hover:not(:disabled) {
     min-height: 48px;
   }
 }
+
+/* Shared moments: local SVG artwork and transform-only decorative motion. */
+.landing {
+  position: relative;
+  isolation: isolate;
+}
+.landing::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  width: min(700px, 90%);
+  height: 620px;
+  top: 8%;
+  left: -8%;
+  background: radial-gradient(ellipse, #6f64a51a, transparent 65%);
+  filter: blur(30px);
+}
+.landing-intro {
+  min-width: 0;
+}
+.memory-scene {
+  margin-top: 22px;
+  max-width: 560px;
+}
+.memory-art {
+  position: relative;
+}
+.memory-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.memory-card {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.memory-card-left {
+  animation: memory-left 9s ease-in-out infinite;
+}
+.memory-card-right {
+  animation: memory-right 10s ease-in-out infinite;
+}
+.memory-heart {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: memory-heart 5s ease-in-out infinite;
+}
+.memory-note {
+  animation: memory-note 8s ease-in-out infinite;
+}
+.memory-star {
+  animation: memory-note 10s ease-in-out infinite reverse;
+}
+.memory-wave {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: memory-wave 3.5s ease-in-out infinite;
+}
+.memory-connection {
+  animation: memory-breathe 5s ease-in-out infinite;
+}
+.memory-scene[data-motion="paused"] * {
+  animation-play-state: paused !important;
+}
+.memory-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  padding-inline: 10px;
+}
+.memory-caption > span:first-child {
+  color: #b6bfd7;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.memory-caption button {
+  background: transparent;
+  color: #aebcde;
+  font-size: 10px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-color: #38425a;
+  white-space: nowrap;
+}
+.motion-static {
+  font-size: 10px;
+  color: #aebcde;
+  white-space: nowrap;
+}
+.landing .features {
+  margin-top: 20px;
+}
+.join {
+  background: linear-gradient(145deg, #222638, #191e2a 70%);
+  border-color: #41475f;
+}
+.room-sidebar nav button,
+.rowactions button,
+.dialog-actions button {
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    box-shadow 0.18s;
+}
+.room-sidebar nav button.selected {
+  box-shadow:
+    inset 0 0 0 1px #6674a0,
+    0 3px 15px #0002;
+}
+@keyframes memory-left {
+  0%,
+  100% {
+    transform: translateY(2px) rotate(-7deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(-4deg);
+  }
+}
+@keyframes memory-right {
+  0%,
+  100% {
+    transform: translateY(-3px) rotate(6deg);
+  }
+  50% {
+    transform: translateY(5px) rotate(3deg);
+  }
+}
+@keyframes memory-heart {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.04);
+  }
+}
+@keyframes memory-note {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes memory-wave {
+  0%,
+  100% {
+    transform: scaleY(0.7);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 0.9;
+  }
+}
+@keyframes memory-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+@media (max-width: 700px) {
+  .memory-scene {
+    max-width: 420px;
+    margin: 18px auto 0;
+  }
+  .memory-art {
+    max-width: 350px;
+    margin-inline: auto;
+  }
+  .memory-caption {
+    padding-inline: 0;
+  }
+  .memory-caption > span:first-child {
+    font-size: 10px;
+  }
+  .memory-caption button {
+    font-size: 9px;
+    padding-inline: 8px;
+  }
+  .memory-note,
+  .memory-star,
+  .memory-connection {
+    animation: none;
+  }
+  .landing .features {
+    justify-content: center;
+    margin-top: 14px;
+  }
+  .landing {
+    gap: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .memory-scene *,
+  .memory-scene *::before,
+  .memory-scene *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .memory-card-left {
+    transform: rotate(-5deg);
+  }
+  .memory-card-right {
+    transform: rotate(4deg);
+  }
+  .room-sidebar nav button,
+  .rowactions button,
+  .dialog-actions button {
+    transition: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing-intro > .eyebrow,
+  .landing h1,
+  .landing-intro > p,
+  .join {
+    animation: moment-arrive 0.65s ease-out both;
+  }
+  .landing h1 {
+    animation-delay: 0.06s;
+  }
+  .landing-intro > p {
+    animation-delay: 0.12s;
+  }
+  .join {
+    animation-delay: 0.16s;
+  }
+  @keyframes moment-arrive {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
