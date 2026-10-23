@@ -485,3 +485,8 @@ Recommended next steps:
 ---
 
 [Short management overview](PROJECT-OVERVIEW.md) · [Deployment](DEPLOYMENT.md) · [Search setup](YOUTUBE-SEARCH.md) · [Acceptance checklist](VERIFICATION.md)
+
+
+### Security hardening (23 October 2026)
+
+Room opens/actions now go through `secure_room_request`: an outer transaction budget survives rejected guesses and malformed commands; only the mutation block rolls back. Direct legacy mutation RPCs are no longer callable by guests. Search first reserves an atomic database budget through `reserve_youtube_search`, checking active membership before contacting Google. See [the security review](SECURITY-REVIEW.md) for limits, abuse cases, verification and remaining provider-level risks.

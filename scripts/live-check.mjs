@@ -24,11 +24,18 @@ const clients = Array.from({ length: 7 }, () =>
 );
 let room, channel, receiveChange;
 async function rpc(client, name, args) {
+  const secured = ["open_room", "room_action"].includes(name);
   const { data, error } = await client
-    .rpc(name, args)
+    .rpc(
+      secured ? "secure_room_request" : name,
+      secured
+        ? { operation: name === "open_room" ? "open" : "action", ...args }
+        : args,
+    )
     .abortSignal(AbortSignal.timeout(15000));
   if (error) throw error;
-  return data;
+  if (secured && data?.error) throw Error(data.error);
+  return secured ? data.data : data;
 }
 async function edit(client, type, payload, id = randomUUID()) {
   return rpc(client, "room_action", {

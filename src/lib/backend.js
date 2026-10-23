@@ -5,11 +5,20 @@ export const captchaSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || "";
 export const db =
   url && key && !url.includes("YOUR_PROJECT") ? createClient(url, key) : null;
 export async function rpc(name, args) {
+  const secured = ["open_room", "room_action"].includes(name);
   const { data, error } = await db
-    .rpc(name, args)
+    .rpc(
+      secured ? "secure_room_request" : name,
+      secured
+        ? { operation: name === "open_room" ? "open" : "action", ...args }
+        : args,
+    )
     .abortSignal(AbortSignal.timeout(15000));
   if (error) throw error;
-  return data;
+  if (secured && data?.error) throw Error(data.error);
+  if (secured && !data?.data)
+    throw Error("Invalid server response. Reload and retry.");
+  return secured ? data.data : data;
 }
 export async function signIn(captchaToken) {
   const { data, error } = await db.auth.getSession();

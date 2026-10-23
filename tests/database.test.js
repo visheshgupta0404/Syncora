@@ -12,17 +12,29 @@ async function identity(user = users[0], role = "authenticated") {
   ]);
   await pg.exec(`set role ${role}`);
 }
+async function secure(args) {
+  const result = (
+    await pg.query(
+      "select public.secure_room_request($1,$2,$3,$4,$5::jsonb) as result",
+      args,
+    )
+  ).rows[0].result;
+  if (result.error) throw Error(result.error);
+  if (result.data?.expires_at)
+    result.data.expires_at = new Date(result.data.expires_at);
+  return result.data;
+}
 async function open(code = null) {
-  return (await pg.query("select * from public.open_room($1)", [code])).rows[0];
+  return secure(["open", code, null, null, null]);
 }
 async function action(room, type, payload, id = randomUUID()) {
-  return (
-    await pg.query("select * from public.room_action($1,$2,$3::jsonb)", [
-      room.id,
-      id,
-      JSON.stringify({ type, payload }),
-    ])
-  ).rows[0];
+  return secure([
+    "action",
+    null,
+    room.id,
+    id,
+    JSON.stringify({ type, payload }),
+  ]);
 }
 const track = (n) => ({
   key: String(n),
@@ -48,7 +60,9 @@ after(async () => {
   await pg?.close();
 });
 beforeEach(async () => {
-  await pg.exec("reset role;truncate public.rooms,public.room_limits");
+  await pg.exec(
+    "reset role;truncate public.rooms,public.room_limits,public.search_budget",
+  );
   await pg.exec(
     await readFile(
       new URL(
@@ -499,4 +513,84 @@ test("inactivity migration is rerunnable and preserves room state and existing d
   const after = (await pg.query("select * from rooms where id=$1", [r.id]))
     .rows[0];
   assert.deepEqual(after, r);
+});
+
+test("failed room guesses commit their budget and legacy RPCs cannot bypass it", async () => {
+  for (let i = 0; i < 10; i++)
+    await assert.rejects(open("0000000000"), /not found/);
+  await assert.rejects(open(), /Too many requests/);
+  await assert.rejects(pg.query("select open_room(null)"), /permission denied/);
+  await assert.rejects(
+    pg.query("select room_action($1,$2,'{}'::jsonb)", [
+      randomUUID(),
+      randomUUID(),
+    ]),
+    /permission denied/,
+  );
+  await pg.exec("reset role");
+  assert.equal(
+    (await pg.query("select hits from room_limits where bucket='request:open'"))
+      .rows[0].hits,
+    11,
+  );
+});
+
+test("invalid command payloads consume budgets and never alter room state", async () => {
+  const room = await open();
+  await assert.rejects(
+    action(room, "chat", { name: { spoof: "A" }, text: "Hi" }),
+    /Invalid message/,
+  );
+  await assert.rejects(
+    action(room, "add", { ...track(1), title: ["wrong type"] }),
+    /Invalid video/,
+  );
+  for (let i = 0; i < 118; i++)
+    await assert.rejects(action(room, "invalid", {}), /Unknown command/);
+  await assert.rejects(
+    action(room, "chat", { name: "A", text: "Hi" }),
+    /Too many requests/,
+  );
+  assert.deepEqual(
+    (await pg.query("select state from rooms where id=$1", [room.id])).rows[0]
+      .state,
+    room.state,
+  );
+});
+
+test("search budgets enforce membership, per-guest rate and global daily quota", async () => {
+  const reserve = async () =>
+    (await pg.query("select reserve_youtube_search() as result")).rows[0].result
+      .status;
+  assert.equal(await reserve(), 403);
+  await open();
+  for (let i = 0; i < 5; i++) assert.equal(await reserve(), 200);
+  assert.equal(await reserve(), 429);
+  await pg.exec("reset role");
+  await pg.query(
+    "update room_limits set window_at=clock_timestamp()-interval '2 minutes' where bucket='search:minute'",
+  );
+  await pg.query("update search_budget set hits=80 where scope='youtube:day'");
+  await identity();
+  assert.equal(await reserve(), 429);
+  await pg.exec("reset role");
+  await pg.query(
+    "update search_budget set window_at=clock_timestamp()-interval '25 hours'",
+  );
+  await identity();
+  assert.equal(await reserve(), 200);
+  await assert.rejects(
+    pg.query("select * from search_budget"),
+    /permission denied/,
+  );
+  await identity(null, "anon");
+  await assert.rejects(reserve(), /permission denied/);
+});
+
+test("many guest identities cannot exceed the shared room-creation daily budget", async () => {
+  await open();
+  await pg.exec("reset role");
+  await pg.query("update search_budget set hits=200 where scope='rooms:day'");
+  await identity(users[1]);
+  await assert.rejects(open(), /daily limit/);
 });

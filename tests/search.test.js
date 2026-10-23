@@ -22,7 +22,7 @@ test("search requires a valid query, configuration and guest session", async () 
 test("search enforces hosted room access before contacting YouTube", async () => {
   for (const [status, body, expected] of [
     [401, {}, 401],
-    [200, [], 403],
+    [200, { status: 403 }, 403],
   ]) {
     let calls = 0;
     const response = await handleSearch(context(), async () => {
@@ -41,7 +41,7 @@ test("search uses embeddable video filters and returns only safe result metadata
       calls++;
       if (calls === 1) {
         assert.equal(options.headers.authorization, "Bearer guest");
-        return Response.json([{ id: "room" }]);
+        return Response.json({ status: 200 });
       }
       const params = new URL(url).searchParams;
       assert.equal(params.get("q"), "A & B");
@@ -76,7 +76,7 @@ test("search handles quota, upstream failure and connection errors without leaki
     let calls = 0;
     const response = await handleSearch(context(), async () =>
       ++calls === 1
-        ? Response.json([{ id: "room" }])
+        ? Response.json({ status: 200 })
         : Response.json({ error: { errors: [{ reason }] } }, { status: 403 }),
     );
     assert.equal(response.status, expected);
@@ -90,4 +90,22 @@ test("search handles quota, upstream failure and connection errors without leaki
     ).status,
     502,
   );
+});
+
+test("search fails closed on exhausted or missing database budgets before Google", async () => {
+  for (const [body, expected] of [
+    [{ status: 429 }, 429],
+    [{}, 503],
+    [[], 503],
+  ]) {
+    let calls = 0;
+    const response = await handleSearch(context(), async (url, options) => {
+      calls++;
+      assert.match(url, /\/rpc\/reserve_youtube_search$/);
+      assert.equal(options.method, "POST");
+      return Response.json(body);
+    });
+    assert.equal(response.status, expected);
+    assert.equal(calls, 1);
+  }
 });

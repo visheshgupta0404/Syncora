@@ -29,19 +29,40 @@ export async function handleSearch({ request, env }, fetcher = fetch) {
       503,
     );
   try {
-    // Validate the guest token and room membership through RLS before spending quota.
-    const membership = await fetcher(
-      `${env.VITE_SUPABASE_URL}/rest/v1/rooms?select=id&expires_at=gt.${encodeURIComponent(new Date().toISOString())}&limit=1`,
+    // Atomic database reservation validates membership and commits abuse budgets.
+    const reservation = await fetcher(
+      `${env.VITE_SUPABASE_URL}/rest/v1/rpc/reserve_youtube_search`,
       {
-        headers: { authorization, apikey: env.VITE_SUPABASE_ANON_KEY },
+        method: "POST",
+        headers: {
+          authorization,
+          apikey: env.VITE_SUPABASE_ANON_KEY,
+          "Content-Type": "application/json",
+        },
+        body: "{}",
         signal: AbortSignal.timeout(10000),
       },
     );
-    if (!membership.ok)
-      return json({ error: "Your session expired. Rejoin the room." }, 401);
-    const rooms = await membership.json();
-    if (!Array.isArray(rooms) || !rooms.length)
-      return json({ error: "Join a room before searching." }, 403);
+    if (!reservation.ok)
+      return json(
+        { error: "Search authorization is unavailable. Rejoin or try later." },
+        reservation.status === 401 ? 401 : 503,
+      );
+    const budget = await reservation.json();
+    if (budget?.status !== 200) {
+      const status = [401, 403, 429].includes(budget?.status)
+        ? budget.status
+        : 503;
+      return json(
+        {
+          error:
+            status === 429
+              ? "Search limit reached. Wait a minute or paste a video link. Daily limits may apply."
+              : "Join a room before searching.",
+        },
+        status,
+      );
+    }
     const url = new URL("https://www.googleapis.com/youtube/v3/search");
     url.search = new URLSearchParams({
       part: "snippet",
@@ -72,12 +93,20 @@ export async function handleSearch({ request, env }, fetcher = fetch) {
       );
     }
     const body = await upstream.json();
-    const items = (body.items || [])
-      .filter((v) => /^[\w-]{11}$/.test(v.id?.videoId) && v.snippet?.title)
+    const items = (Array.isArray(body.items) ? body.items : [])
+      .slice(0, 8)
+      .filter(
+        (v) =>
+          /^[\w-]{11}$/.test(v.id?.videoId) &&
+          typeof v.snippet?.title === "string",
+      )
       .map((v) => ({
         id: v.id.videoId,
         title: v.snippet.title.slice(0, 120),
-        channel: v.snippet.channelTitle || "",
+        channel:
+          typeof v.snippet.channelTitle === "string"
+            ? v.snippet.channelTitle.slice(0, 120)
+            : "",
         thumbnail: `https://i.ytimg.com/vi/${v.id.videoId}/mqdefault.jpg`,
       }));
     return json({ items });
