@@ -55,6 +55,7 @@ function App() {
     [captchaReset, setCaptchaReset] = useState(0),
     [hasSession, setHasSession] = useState(false);
   const [tab, setTab] = useState("search");
+  const openingRoom = useRef(false);
   const inviteDialog = useRef(null),
     helpDialog = useRef(null),
     releaseDialog = useRef(null),
@@ -87,9 +88,19 @@ function App() {
   }
   const verificationRequired = !!captchaSiteKey && !hasSession;
   async function open(invite) {
-    await session.open(invite, token || undefined);
+    // Lock synchronously: React's busy render may lag a second click/submit.
+    if (openingRoom.current) return;
+    if (verificationRequired && !token)
+      return setNotice("Complete the security verification before joining.");
+    openingRoom.current = true;
+    const singleUseToken = token;
     setToken("");
-    setCaptchaReset((n) => n + 1);
+    try {
+      await session.open(invite, singleUseToken || undefined);
+    } finally {
+      setCaptchaReset((n) => n + 1);
+      openingRoom.current = false;
+    }
   }
   async function join(e) {
     e.preventDefault();

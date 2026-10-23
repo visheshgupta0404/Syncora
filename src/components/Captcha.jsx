@@ -23,6 +23,11 @@ export default function Captcha({ siteKey, onToken, resetKey }) {
   useEffect(() => {
     let active = true,
       id;
+    callback.current("");
+    setError("");
+    const invalidate = () => {
+      if (active) callback.current("");
+    };
     load()
       .then((t) => {
         if (!active) return;
@@ -30,15 +35,23 @@ export default function Captcha({ siteKey, onToken, resetKey }) {
           sitekey: siteKey,
           theme: "dark",
           size: "flexible",
-          callback: (token) => callback.current(token),
-          "expired-callback": () => callback.current(""),
+          callback: (token) => {
+            if (!active) return;
+            setError("");
+            callback.current(token);
+          },
+          "expired-callback": invalidate,
+          "timeout-callback": invalidate,
           "error-callback": () => {
-            callback.current("");
+            if (!active) return;
+            invalidate();
             setError("Verification failed. Refresh to retry.");
           },
         });
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => {
+        if (active) setError(e.message);
+      });
     return () => {
       active = false;
       if (id !== undefined) window.turnstile?.remove(id);
