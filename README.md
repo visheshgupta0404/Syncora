@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/icon.svg" width="88" height="88" alt="Syncora sound wave logo" />
+<img src="public/icon.svg" width="88" height="88" alt="Syncora flowing S logo" />
 
 # Syncora
 

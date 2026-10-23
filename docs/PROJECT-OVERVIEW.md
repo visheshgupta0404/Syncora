@@ -1,13 +1,13 @@
 # Syncora — Project Overview
 
-**Management briefing · 20 October 2026**  
+**Management briefing · updated 23 October 2026**
 **Live application:** [syncoramoments.pages.dev](https://syncoramoments.pages.dev/)
 
 ## Executive overview
 
 Syncora helps people in different locations watch and listen to YouTube together. Up to six people can join a private room, manage a shared playlist and chat from their phones or computers.
 
-The core application is built and deployed. It uses free service tiers for the current small-group scope. Broader device testing is still needed before claiming consistent behavior across Android and iPhone models.
+The core application is built and deployed. It uses free service tiers for the current small-group scope. The owner reports completing the Android/iPhone acceptance session; broader device coverage remains an ongoing beta activity.
 
 ## The problem it solves
 
@@ -65,9 +65,9 @@ The YouTube search key stays on the server. Database access rules restrict room 
 | Area | Current position |
 | --- | --- |
 | Core features | Implemented and deployed |
-| Automated validation | Latest implementation checks passed: 27 tests and a production build |
+| Automated validation | Latest implementation checks passed: 32 tests and a production build |
 | Hosted services | Room access, live updates, search and deployment have been checked |
-| Physical devices | Wider Android/iPhone playback and installation acceptance remains necessary |
+| Physical devices | Owner reports Android/iPhone acceptance completed; wider device coverage remains ongoing |
 | Synchronization | Shared timing and drift correction are implemented; exact 0 ms alignment is not guaranteed |
 | Background use | Playback may stop or lose synchronization when switching apps or locking the phone |
 | iPhone playback | A direct tap may be required to enable sound |
@@ -78,14 +78,14 @@ The app shell can load from cache, but shared rooms, search and video playback r
 
 The deployment uses Supabase and Cloudflare free tiers, with YouTube search subject to API quotas. This supports the current small-group goal within provider limits; it is not a promise of unlimited free operation. Inactive services may pause, and usage should be reviewed as adoption grows.
 
-Ongoing maintenance includes checking service availability and quotas, keeping dependencies current, reviewing anonymous accounts and repeating device checks after meaningful changes. Optional CAPTCHA protection is supported but is not currently configured.
+Ongoing maintenance includes checking service availability and quotas, keeping dependencies current, reviewing anonymous accounts and repeating device checks after meaningful changes. Cloudflare Turnstile CAPTCHA is enabled for new guest sessions and verified through Supabase Auth.
 
 ## Release workflow and next priorities
 
 Changes are checked locally, committed to GitHub's `main` branch and automatically built by Cloudflare Pages. GitHub also runs automated verification. Database changes require a separate, controlled migration.
 
-The next priority is a practical acceptance session using real Android and iPhone devices: join the same room, test shared playback and chat, switch apps, return and Resync, and verify installation. Further features should follow observed user needs and service capacity.
+The owner reports completing the Android/iPhone acceptance session. Next, collect community feedback, monitor service quotas and repeat acceptance checks after changes. Further features should follow observed user needs and service capacity.
 
-**Delivery assessment:** Syncora is a deployed application ready for small-group use and device acceptance testing. Its main remaining constraints come from mobile playback behavior, YouTube restrictions and free-service limits.
+**Delivery assessment:** Syncora is a deployed application ready for small-group public beta use with owner-reported phone acceptance. Its main remaining constraints come from mobile playback behavior, YouTube restrictions and free-service limits.
 
 For implementation details and flowcharts, see the [complete project walkthrough](TECHNICAL-WALKTHROUGH.md).

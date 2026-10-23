@@ -357,10 +357,10 @@ Row-level security, or RLS, checks access inside the database. Reads require mem
 | Public configuration | Build validation rejects common secret/service-role key mistakes; public keys still rely on RLS |
 | Browser protections | CSP, frame restrictions and disabled camera/mic/location permissions |
 | Content | Typed/size/length checks and React text rendering |
-| Signup | Optional Turnstile integration exists; CAPTCHA is not currently configured |
+| Signup | Cloudflare Turnstile is enabled for new guest sessions; Supabase validates tokens server-side |
 | Privacy | Members and database administrator can read chat; no end-to-end encryption |
 
-Per-identity transaction limits are ten room opens, 120 action attempts and 30 chat attempts per minute in their corresponding paths. A rolled-back rejected transaction does not persist its attempted limit increment. These limits are not a cross-identity or IP-wide abuse prevention system. Search has membership checks but no dedicated per-user search limiter.
+The secured RPC commits outer per-identity budgets even when room guesses or commands fail: ten opens and 120 action attempts per minute, with a separate 30 successful chat messages per minute limit. Search requires membership and an atomic reservation: six requests per minute and 30 per rolling day per guest, with 80 reservations per rolling day across the deployment. Room creation has a shared 200-attempt daily ceiling. These budgets do not replace provider-level IP limits or protect against all distributed traffic.
 
 YouTube receives playback requests and Google receives search terms. Syncora does not extract media, hide ads/branding or bypass embedding restrictions. There is no claim of an independent security audit or hardened large-scale public service.
 
@@ -423,7 +423,7 @@ An optional manual GitHub deployment workflow is retained as an alternative. It 
 
 ## 11. Testing and evidence
 
-The latest completed implementation check passed **27 tests and a production build**. This is the last feature validation result, not evidence that every phone or external failure scenario has been tested.
+The latest completed implementation check passed **32 tests and a production build**. This is the last feature validation result, not evidence that every phone or external failure scenario has been tested.
 
 | Area | What is checked |
 | --- | --- |
