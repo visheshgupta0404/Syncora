@@ -37,7 +37,6 @@ The current deployment already has these migrations. For older installations, ap
 4. `20261019_scheduled_playback.sql`
 5. `20261019_short_room_codes.sql`
 6. `20261021_inactivity_expiry.sql` — renews expiry after joins and accepted actions; existing deadlines stay until the next use.
-
 7. `20261023_security_budgets.sql` — persistent failed-attempt budgets, secured room RPCs, shared room-creation and YouTube search caps. Reload existing clients after applying.
 
 Files are in [`supabase/migrations/`](../supabase/migrations/). Short-code migration retains legacy invitation aliases.

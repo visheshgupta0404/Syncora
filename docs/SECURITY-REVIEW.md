@@ -27,7 +27,7 @@ Limits use database time and atomic counters, not browser timers or process-loca
 
 ## Operational limits and remaining risk
 
-- **Anonymous identities are not people.** An attacker can obtain new guest identities subject to Supabase Auth limits. Configure Supabase Auth CAPTCHA with a Turnstile key and verify Auth sign-up limits. The application currently treats CAPTCHA as optional; no CAPTCHA credentials were invented or embedded.
+- **Anonymous identities are not people.** An attacker can obtain new guest identities subject to Supabase Auth limits. The live dashboard confirms 30 anonymous sign-ins per hour per IP and CAPTCHA disabled. Configure Supabase Auth CAPTCHA with a Turnstile key for stronger bot protection. The application currently treats CAPTCHA as optional; no CAPTCHA credentials were invented or embedded.
 - **Direct Supabase reads, Realtime connections, clock requests and anonymous sign-in are provider endpoints.** Application mutation/search budgets do not impose a deployment-wide IP limit on them. Provider quotas, Auth rate limits, monitoring and appropriate edge/network protections are still necessary. A Cloudflare rule on the website does not protect a separately reachable Supabase URL.
 - A malicious valid member can control playback, remove queue entries or fill the room's chat within limits. Equal control is intentional; host/moderator roles, mute/kick and invitations tied to accounts would be additional product work.
 - Room codes are bearer invitations. Anyone receiving one can join if a seat is available. Public sharing of codes defeats their privacy. Existing short codes retain their 40-bit entropy; they are not user passwords.
@@ -40,3 +40,8 @@ Limits use database time and atomic counters, not browser timers or process-loca
 32 local tests cover existing room workflows plus persistent failed-attempt limits, revoked legacy RPCs, malformed commands, membership/search limits, global caps, and fail-closed API responses. Run `npm test`, `npm run build`, and `npm audit` after changes.
 
 Apply `supabase/migrations/20261023_security_budgets.sql` before using the updated client/API. `supabase/schema.sql` includes the same migration for fresh installations. Keep schema and migrations in sync; do not reapply older function-replacement migrations after the latest security migration.
+
+
+### Hosted verification
+
+The security migration was applied successfully to the production Supabase project. The hosted disposable-room check passed seven independent guest sessions, six-seat admission/seventh-seat rejection, outsider RLS isolation, private Realtime/presence, retry deduplication, queue rotation, playback, concurrent chat, and seat replacement. The test room was released; seven guest Auth records remain for administrator retention review. The Pages build is deployed with the new API/client, CSP includes `form-action`, and unauthenticated search returns 401. Live privilege checks confirm legacy mutation RPCs are blocked, secure RPC/search reservation are enabled, and search-budget RLS is enabled.
