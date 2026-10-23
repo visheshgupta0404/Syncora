@@ -119,7 +119,13 @@ function App() {
       </a>
       <header>
         <a className="brand" href="/" aria-label="Syncora home">
-          ≋{" "}
+          <img
+            className="brand-mark"
+            src="/logo-mark.svg"
+            alt=""
+            width="48"
+            height="48"
+          />
           <span>
             syncora<i>together, in tune.</i>
           </span>
