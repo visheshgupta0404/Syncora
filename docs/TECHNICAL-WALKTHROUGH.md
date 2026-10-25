@@ -419,7 +419,7 @@ The owner requested direct work on `main`. Pages builds it with Node 24, `npm ru
 
 SQL migrations are applied separately in Supabase. A push does not execute them. Future incompatible changes require a planned migration/client rollout. The current schema supports fresh installations; dated files support existing databases.
 
-An optional manual GitHub deployment workflow is retained as an alternative. It requires configured public variables and scoped Cloudflare credentials.
+Cloudflare Pages Git integration is the single production deployment path. Pushes to `main` trigger its configured build; GitHub runs verification separately.
 
 ## 11. Testing and evidence
 
@@ -484,7 +484,7 @@ Recommended next steps:
 
 ---
 
-[Short management overview](PROJECT-OVERVIEW.md) · [Deployment](DEPLOYMENT.md) · [Search setup](YOUTUBE-SEARCH.md) · [Acceptance checklist](VERIFICATION.md)
+[Short management overview](PROJECT-OVERVIEW.md) · [Deployment](DEPLOYMENT.md) · [Search setup](DEPLOYMENT.md#youtube-search) · [Acceptance checklist](VERIFICATION.md)
 
 
 ### Security hardening (23 October 2026)

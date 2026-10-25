@@ -21,11 +21,27 @@ Connect the GitHub repository with these settings:
 | Output directory | `dist` |
 | `NODE_VERSION` | `24` |
 | Public variables | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` |
-| Server-only secret | `YOUTUBE_API_KEY` — see [search setup](YOUTUBE-SEARCH.md) |
+| Server-only secret | `YOUTUBE_API_KEY` — see [search setup](#youtube-search) |
 
 The API function needs the Supabase variables as well. Redeploy after changing variables or secrets. Guest sessions and installed apps belong to each hostname; rejoin using the room code when changing addresses.
 
-Optional CAPTCHA: configure a Turnstile secret in **Supabase Auth**, and its public site key as `VITE_TURNSTILE_SITE_KEY` in Pages. Configure both together before enabling CAPTCHA. Use Supabase Auth rate limits to protect anonymous sign-in.
+CAPTCHA is enabled in production. For a new installation, create a Cloudflare Turnstile widget for the app hostname. Set `VITE_TURNSTILE_SITE_KEY` in Pages and deploy first; then enable CAPTCHA in **Supabase Auth → Attack Protection**, select **Turnstile by Cloudflare** and save the matching secret. Selecting hCaptcha with a Turnstile key rejects valid tokens. Keep Auth rate limits enabled.
+
+## YouTube search
+
+Search uses the official YouTube Data API through `/api/youtube-search`. The key stays on Cloudflare; requests require membership in an unexpired room.
+
+1. Create or select a project in [Google Cloud Console](https://console.cloud.google.com/).
+2. Enable **YouTube Data API v3** and create an API key restricted to that API.
+3. In Cloudflare Pages → **syncoramoments → Settings → Variables and Secrets**, save `YOUTUBE_API_KEY` as a production **Secret**. Never prefix it with `VITE_` or commit it.
+4. Ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are available to the function, then redeploy.
+5. Join a room, search and add a result; verify another member sees it.
+
+Review Google's daily quota. Search runs on submission; authenticated access does not replace abuse protection. Pages has no fixed outbound IP, so an IP restriction is unsuitable here; browser referrer restrictions are unsuitable for this server-side key.
+
+`npm run dev` serves the frontend only. Test real search on hosted Pages. Pasting links works without the API key.
+
+Search terms go to Google/YouTube. Results are limited to eight embeddable videos; playback restrictions can still apply. Adding a result saves its video ID and title in the shared queue.
 
 ## Existing databases
 
@@ -46,7 +62,3 @@ Files are in [`supabase/migrations/`](../supabase/migrations/). Short-code migra
 Room-open requests clean expired rooms; administrators can also run `select public.cleanup_syncora();`. Anonymous Auth accounts need separate review. Free services have quotas and may pause inactive projects.
 
 Run the [verification checklist](VERIFICATION.md) after setup. Physical Android/iPhone acceptance remains necessary.
-
-## Optional manual deployment
-
-The GitHub **Deploy to Cloudflare Pages** workflow is an alternative to Git integration. Configure repository variables `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `CLOUDFLARE_PAGES_PROJECT` and optional `VITE_TURNSTILE_SITE_KEY`; configure secrets `CLOUDFLARE_API_TOKEN` (Pages edit access) and `CLOUDFLARE_ACCOUNT_ID`. Run the workflow on `main`.

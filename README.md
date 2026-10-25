@@ -49,7 +49,7 @@ npm ci
 npm run dev
 ```
 
-Choose **Explore the local demo** to try the interface without configuration. For shared rooms, copy `.env.example` to `.env.local` and follow the [deployment guide](docs/DEPLOYMENT.md). YouTube search requires the server-side [API setup](docs/YOUTUBE-SEARCH.md).
+Choose **Explore the local demo** to try the interface without configuration. For shared rooms, copy `.env.example` to `.env.local` and follow the [deployment guide](docs/DEPLOYMENT.md). YouTube search requires the server-side [API setup](docs/DEPLOYMENT.md#youtube-search).
 
 ```sh
 npm test
