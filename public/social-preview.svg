@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#f6f5fb"/>
+<g transform="translate(64 47) scale(.65)"><path fill="#b8a0f7" d="M106 47C100 23 85 10 68 10 48 10 29 27 18 43 7 58 9 70 27 72 43 74 61 66 78 70 91 73 96 81 89 90 78 104 58 105 40 96L17 82C22 103 40 115 59 111 78 107 99 91 106 77 114 60 101 52 83 52 65 52 46 60 31 58 16 56 25 44 36 35 54 20 74 19 91 33Z"/></g>
+<g font-family="Arial, sans-serif"><text x="158" y="105" font-size="46" font-weight="700" fill="#171a2c">syncora</text>
+<text x="64" y="261" font-size="80" font-weight="700" letter-spacing="-3" fill="#171a2c">Different places.</text>
+<text x="64" y="350" font-size="80" font-weight="700" letter-spacing="-3" fill="#7460b0">Same moment.</text>
+<text x="67" y="418" font-size="30" fill="#5c586f">Watch, listen and chat together.</text>
+<path d="M64 485H1136" stroke="#ded8e9" stroke-width="2"/>
+<text x="67" y="550" font-size="25" fill="#51456e">Private rooms · Up to 6 people</text>
+<text x="1133" y="550" font-size="24" text-anchor="end" fill="#51456e">syncoramoments.pages.dev</text></g></svg>
