@@ -8,7 +8,7 @@
 
 Watch, listen and hang out together in a private room for **up to 6 people**.
 
-**[▶ Launch Syncora](https://syncoraconnect.pages.dev/)** &nbsp; · &nbsp; [Quick start](#your-room-in-three-steps) &nbsp; · &nbsp; [Run locally](#for-developers)
+**[▶ Launch Syncora](https://syncoramoments.pages.dev/)** &nbsp; · &nbsp; [Quick start](#your-room-in-three-steps) &nbsp; · &nbsp; [Run locally](#for-developers)
 
 [![Checks](https://github.com/visheshgupta0404/Syncora/actions/workflows/verify.yml/badge.svg)](https://github.com/visheshgupta0404/Syncora/actions/workflows/verify.yml)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=61DAFB&labelColor=10141f)
@@ -29,7 +29,7 @@ Watch, listen and hang out together in a private room for **up to 6 people**.
 
 ## Your room in three steps
 
-1. **Create** — [open Syncora](https://syncoraconnect.pages.dev/), enter your name and create a room.
+1. **Create** — [open Syncora](https://syncoramoments.pages.dev/), enter your name and create a room.
 2. **Invite** — share the room link or send a WhatsApp invitation.
 3. **Enjoy** — search for a video, add it to the queue and press play.
 
@@ -90,6 +90,6 @@ Rooms expire after **7 days of inactivity**. Joining or using room controls, the
 
 **A little closer, wherever you are.**
 
-[Try Syncora](https://syncoraconnect.pages.dev/)
+[Try Syncora](https://syncoramoments.pages.dev/)
 
 </div>

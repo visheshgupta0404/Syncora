@@ -15,10 +15,10 @@ test("link preview metadata is present in initial HTML for social crawlers", asy
   assert.ok(description.length >= 100);
   assert.equal(meta("property", "og:description"), description);
   assert.equal(meta("property", "og:type"), "website");
-  assert.equal(meta("property", "og:url"), "https://syncoraconnect.pages.dev/");
+  assert.equal(meta("property", "og:url"), "https://syncoramoments.pages.dev/");
   assert.equal(
     meta("property", "og:image"),
-    "https://syncoraconnect.pages.dev/social-preview.png",
+    "https://syncoramoments.pages.dev/social-preview.png",
   );
   assert.equal(meta("name", "twitter:card"), "summary_large_image");
   assert.equal(meta("name", "twitter:image"), meta("property", "og:image"));
