@@ -31,3 +31,7 @@ test-results/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Local project notes and agent instructions (kept on this machine)
+/docs/
+/AGENTS.md

@@ -49,7 +49,17 @@ npm ci
 npm run dev
 ```
 
-Choose **Explore the local demo** to try the interface without configuration. For shared rooms, copy `.env.example` to `.env.local` and follow the [deployment guide](docs/DEPLOYMENT.md). YouTube search requires the server-side [API setup](docs/DEPLOYMENT.md#youtube-search).
+Choose **Explore the local demo** to try the interface without configuration.
+
+For shared rooms:
+
+1. Enable anonymous sign-in in Supabase and run `supabase/schema.sql` for a new database. Existing databases use the ordered SQL migrations.
+2. Copy `.env.example` to `.env.local` and set the public Supabase URL/key. Never expose a service-role key.
+3. Deploy `main` on Cloudflare Pages using `npm run build`, output `dist`, and Node.js 24. Set the public Supabase variables in Pages too.
+4. For search, enable YouTube Data API v3 and save an API-restricted `YOUTUBE_API_KEY` as a server-only Pages secret.
+5. For CAPTCHA, deploy `VITE_TURNSTILE_SITE_KEY` first, then enable **Turnstile by Cloudflare** in Supabase Auth with the matching secret. The site key is public; the secret stays in Supabase.
+
+Local Vite serves the frontend; the search endpoint runs on Cloudflare Pages. Search has per-guest limits and a shared 80-request daily ceiling; pasting video links remains available.
 
 ```sh
 npm test
@@ -63,7 +73,6 @@ npm run build
 | `supabase/` | Schema, permissions and migrations |
 | `public/` | Icons and hosting configuration |
 | `tests/` · `scripts/` | Automated checks and maintenance tools |
-| `docs/` | Setup and verification guides |
 
 Pushes to `main` deploy automatically. Keep local secrets in ignored environment files.
 
@@ -81,6 +90,6 @@ Rooms expire after **7 days of inactivity**. Joining or using room controls, the
 
 **A little closer, wherever you are.**
 
-[Project overview](docs/PROJECT-OVERVIEW.md) &nbsp; · &nbsp; [Full walkthrough](docs/TECHNICAL-WALKTHROUGH.md) &nbsp; · &nbsp; [Deployment](docs/DEPLOYMENT.md) &nbsp; · &nbsp; [Verification](docs/VERIFICATION.md)
+[Try Syncora](https://syncoramoments.pages.dev/)
 
 </div>
