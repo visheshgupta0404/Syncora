@@ -329,8 +329,8 @@ function App() {
                   : "Add a YouTube video, then start the queue."}
               </p>
               <div className="note">
-                On iPhone, tap the YouTube player to allow sound. Keep Syncora
-                open for synchronization. Background playback is not guaranteed.
+                On iPhone, tap the YouTube player to enable sound. Keep Syncora
+                open for shared playback and use Resync to catch up when needed.
               </div>
               <div className="listening-as">
                 <label>

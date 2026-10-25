@@ -80,7 +80,7 @@ Pushes to `main` deploy automatically. Keep local secrets in ignored environment
 
 ## A few things to know
 
-Keep Syncora visible while listening. iPhone may need a tap to enable sound. YouTube buffering and device restrictions mean **exact 0 ms sync and background playback aren't guaranteed**.
+Enjoy shared playback with your room and use **Resync** to catch up when needed. Keep Syncora open while watching or listening. On iPhone, tap the YouTube player to enable sound.
 
 Rooms expire after **7 days of inactivity**. Joining or using room controls, the queue or chat renews this period. Share invitations privately. Chat is visible to room members and the database administrator; it is not end-to-end encrypted. Videos play through YouTube's official embedded player.
 
