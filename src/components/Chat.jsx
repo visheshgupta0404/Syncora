@@ -1,58 +1,40 @@
-import { Fragment, useEffect, useId, useRef, useState } from "react";
-const emojis = [
-  ["😀", "Grinning"],
-  ["😂", "Laughing"],
-  ["🥹", "Touched"],
-  ["🥰", "Loved"],
-  ["😍", "Heart eyes"],
-  ["😎", "Cool"],
-  ["🥳", "Celebrating"],
-  ["🤔", "Thinking"],
-  ["😭", "Crying"],
-  ["😮", "Surprised"],
-  ["😴", "Sleepy"],
-  ["🫶", "Heart hands"],
-  ["❤️", "Heart"],
-  ["💜", "Purple heart"],
-  ["✨", "Sparkles"],
-  ["🔥", "Fire"],
-  ["👍", "Thumbs up"],
-  ["👏", "Clapping"],
-  ["🙌", "Hands raised"],
-  ["👋", "Waving"],
-  ["🎧", "Headphones"],
-  ["🎵", "Music"],
-  ["🎶", "Musical notes"],
-  ["🎤", "Microphone"],
-  ["🎬", "Movie"],
-  ["🍿", "Popcorn"],
-  ["💃", "Dancing"],
-  ["🕺", "Dancer"],
-  ["🌙", "Moon"],
-  ["☕", "Coffee"],
-  ["🤝", "Handshake"],
-  ["💯", "Hundred"],
-];
+import {
+  Fragment,
+  Suspense,
+  lazy,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
+import GifMessage from "./GifMessage.jsx";
+import { getGifUrl } from "../lib/chat-media.js";
+const EmojiPicker = lazy(() => import("emoji-picker-react"));
 export default function Chat({ messages, name, dispatch, disabled }) {
   const [text, setText] = useState(""),
     [pending, setPending] = useState(false),
-    [emojiOpen, setEmojiOpen] = useState(false);
+    [emojiOpen, setEmojiOpen] = useState(false),
+    [gifOpen, setGifOpen] = useState(false),
+    [gifLink, setGifLink] = useState("");
   const input = useRef(null),
     composer = useRef(null),
     emojiToggle = useRef(null);
   const pickerId = useId();
   const picker = useRef(null);
   useEffect(() => {
-    if (!emojiOpen) return;
+    if (!emojiOpen && !gifOpen) return;
     picker.current
-      ?.querySelector("button:not(:disabled)")
+      ?.querySelector("input, button:not(:disabled)")
       ?.focus({ preventScroll: true });
     const closeOutside = (event) => {
-      if (!composer.current?.contains(event.target)) setEmojiOpen(false);
+      if (!composer.current?.contains(event.target)) {
+        setEmojiOpen(false);
+        setGifOpen(false);
+      }
     };
     document.addEventListener("pointerdown", closeOutside);
     return () => document.removeEventListener("pointerdown", closeOutside);
-  }, [emojiOpen]);
+  }, [emojiOpen, gifOpen]);
   function insertEmoji(emoji) {
     const start = input.current.selectionStart,
       end = input.current.selectionEnd;
@@ -74,18 +56,24 @@ export default function Chat({ messages, name, dispatch, disabled }) {
   }, [messages.length, messages.at(-1)?.id]);
   async function send(e) {
     e.preventDefault();
-    if (!text.trim() || disabled || pending) return;
+    await sendContent(text.trim());
+  }
+  async function sendContent(content, isGif = false) {
+    if (!content || disabled || pending || (isGif && !getGifUrl(content)))
+      return;
     setPending(true);
     const ok = await dispatch({
       type: "chat",
       payload: {
         id: crypto.randomUUID(),
         name: name.trim() || "Listener",
-        text: text.trim(),
+        text: content,
       },
     });
     if (ok) {
-      setText("");
+      if (!isGif) setText("");
+      setGifLink("");
+      setGifOpen(false);
       setEmojiOpen(false);
       follow.current = true;
     }
@@ -138,7 +126,7 @@ export default function Chat({ messages, name, dispatch, disabled }) {
                       })}
                     </time>
                   </div>
-                  <p>{m.text}</p>
+                  <GifMessage text={m.text} />
                 </div>
               </article>
             </Fragment>
@@ -160,15 +148,24 @@ export default function Chat({ messages, name, dispatch, disabled }) {
         className="chat-composer"
         ref={composer}
         onKeyDown={(event) => {
-          if (event.key === "Escape" && emojiOpen) {
+          if (
+            event.key === "Enter" &&
+            event.target.closest(".EmojiPickerReact")
+          ) {
+            event.preventDefault();
+          }
+          if (event.key === "Escape" && (emojiOpen || gifOpen)) {
             event.preventDefault();
             setEmojiOpen(false);
+            setGifOpen(false);
             emojiToggle.current?.focus();
           }
         }}
         onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget))
+          if (!event.currentTarget.contains(event.relatedTarget)) {
             setEmojiOpen(false);
+            setGifOpen(false);
+          }
         }}
       >
         {emojiOpen && !disabled && !pending && (
@@ -183,26 +180,59 @@ export default function Chat({ messages, name, dispatch, disabled }) {
               <strong>A little reaction</strong>
               <span>Emojis</span>
             </div>
-            <div className="chat-emoji-grid">
-              {emojis.map(([emoji, label]) => (
-                <button
-                  type="button"
-                  key={emoji}
-                  aria-label={label}
-                  title={label}
-                  disabled={
-                    text.length -
-                      ((input.current?.selectionEnd ?? 0) -
-                        (input.current?.selectionStart ?? 0)) +
-                      emoji.length >
-                    500
-                  }
-                  onClick={() => insertEmoji(emoji)}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
+            <Suspense fallback={<p role="status">Loading emojis…</p>}>
+              <EmojiPicker
+                theme="dark"
+                emojiStyle="native"
+                width="100%"
+                height={320}
+                autoFocusSearch={true}
+                previewConfig={{ showPreview: false }}
+                onEmojiClick={({ emoji }) => insertEmoji(emoji)}
+              />
+            </Suspense>
+          </div>
+        )}
+        {gifOpen && !disabled && !pending && (
+          <div
+            className="chat-emoji-picker chat-gif-picker"
+            ref={picker}
+            role="group"
+            aria-label="Share a GIF"
+          >
+            <label htmlFor={pickerId + "-gif"}>Share a GIF</label>
+            <p>Paste a direct .gif link from Giphy or Tenor.</p>
+            <input
+              id={pickerId + "-gif"}
+              type="url"
+              maxLength={500}
+              value={gifLink}
+              placeholder="https://media.giphy.com/media/…/giphy.gif"
+              onChange={(event) => setGifLink(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  sendContent(getGifUrl(gifLink), true);
+                }
+              }}
+            />
+            {gifLink && !getGifUrl(gifLink) && (
+              <small role="status">
+                Use an HTTPS .gif link hosted by Giphy or Tenor.
+              </small>
+            )}
+            <button
+              type="button"
+              className="primary"
+              disabled={!getGifUrl(gifLink)}
+              onClick={() => sendContent(getGifUrl(gifLink), true)}
+            >
+              Send GIF ↑
+            </button>
+            <small>
+              GIFs load from their provider when someone taps View GIF.
+            </small>
           </div>
         )}
         <label>
@@ -240,9 +270,25 @@ export default function Chat({ messages, name, dispatch, disabled }) {
             }
             disabled={disabled || pending}
             title="Emojis"
-            onClick={() => setEmojiOpen(!emojiOpen)}
+            onClick={() => {
+              setEmojiOpen(!emojiOpen);
+              setGifOpen(false);
+            }}
           >
             <span aria-hidden="true">☺</span>
+          </button>
+          <button
+            type="button"
+            className="chat-gif-toggle"
+            disabled={disabled || pending}
+            aria-label="Share a GIF"
+            aria-expanded={gifOpen && !disabled && !pending}
+            onClick={() => {
+              setGifOpen(!gifOpen);
+              setEmojiOpen(false);
+            }}
+          >
+            GIF
           </button>
           <button
             className="primary"
