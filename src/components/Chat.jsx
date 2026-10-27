@@ -10,6 +10,7 @@ import {
 import GifMessage from "./GifMessage.jsx";
 import GifSearch from "./GifSearch.jsx";
 import { getGifUrl, getGiphyId } from "../lib/chat-media.js";
+import { getBuiltinGif } from "../lib/reactions.js";
 const EmojiPicker = lazy(() => import("emoji-picker-react"));
 export default function Chat({ messages, name, dispatch, disabled }) {
   const [text, setText] = useState(""),
@@ -64,7 +65,10 @@ export default function Chat({ messages, name, dispatch, disabled }) {
       !content ||
       disabled ||
       pending ||
-      (isGif && !getGifUrl(content) && !getGiphyId(content))
+      (isGif &&
+        !getGifUrl(content) &&
+        !getGiphyId(content) &&
+        !getBuiltinGif(content))
     )
       return;
     setPending(true);

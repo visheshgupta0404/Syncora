@@ -2563,3 +2563,8 @@ button:hover:not(:disabled) {
 .chat-gif-picker details { font-size: 12px; margin-top: 12px; }
 .chat-gif-picker summary { cursor: pointer; }
 .chat-composer .chat-gif-picker { max-height: min(460px, 65dvh); overflow-y: auto; }
+.gif-source-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+.chat-composer .gif-source-tabs button { flex: 1; min-height: 38px; font-size: 12px; padding: 6px; }
+.gif-source-tabs button[aria-pressed="true"] { background: #c4b5fd; color: #181b2d; }
+.gif-search-results.builtin-reactions { max-height: 260px; }
+.builtin-reactions img { height: auto; aspect-ratio: 5 / 3; }

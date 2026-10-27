@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { getGifUrl, getGiphyId } from "../lib/chat-media.js";
 import { gifRendition, requestGiphy } from "../lib/giphy.js";
+import { getBuiltinGif } from "../lib/reactions.js";
 
 export default function GifMessage({ text }) {
-  const directUrl = getGifUrl(text);
+  const builtin = getBuiltinGif(text);
+  const directUrl = builtin || getGifUrl(text);
   const id = getGiphyId(text);
   const [resolvedUrl, setResolvedUrl] = useState(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(
+    () =>
+      Boolean(builtin) &&
+      (typeof window === "undefined" ||
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches),
+  );
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     if (!visible || !id) return;
