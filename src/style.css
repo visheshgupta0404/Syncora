@@ -2552,3 +2552,14 @@ button:hover:not(:disabled) {
 .chat-composer .EmojiPickerReact { min-height: 0; container-type: normal; }
 .chat-composer .EmojiPickerReact h2 { margin: 0; font-size: 12px; line-height: 1.5; }
 .chat-composer .EmojiPickerReact input { margin: 0; }
+
+.gif-search-input { display: flex; gap: 6px; margin-top: 8px; }
+.gif-search-input input { flex: 1; width: 0; }
+.chat-composer .gif-search-input button { min-height: 42px; padding: 8px; }
+.gif-search-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; max-height: 210px; overflow-y: auto; margin-top: 10px; }
+.chat-composer .gif-search-results button { padding: 0; margin: 0; min-height: 72px; overflow: hidden; }
+.gif-search-results img { display: block; width: 100%; height: 90px; object-fit: contain; }
+.giphy-attribution { display: block; font-size: 11px; font-weight: 700; margin: 10px 0; }
+.chat-gif-picker details { font-size: 12px; margin-top: 12px; }
+.chat-gif-picker summary { cursor: pointer; }
+.chat-composer .chat-gif-picker { max-height: min(460px, 65dvh); overflow-y: auto; }

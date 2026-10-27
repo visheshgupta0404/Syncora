@@ -14,10 +14,17 @@ export function getGifUrl(text) {
       !/\.gif$/i.test(url.pathname)
     )
       return null;
-    url.search = "";
-    url.hash = "";
-    return url.href;
+    return text.trim();
   } catch {
     return null;
   }
+}
+
+export function getGiphyId(text) {
+  if (typeof text !== "string") return null;
+  return (
+    text
+      .trim()
+      .match(/^https:\/\/giphy\.com\/gifs\/([a-zA-Z0-9]{1,80})$/)?.[1] ?? null
+  );
 }

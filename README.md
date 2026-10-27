@@ -58,6 +58,7 @@ For shared rooms:
 3. Deploy `main` on Cloudflare Pages using `npm run build`, output `dist`, and Node.js 24. Set the public Supabase variables in Pages too.
 4. For search, enable YouTube Data API v3 and save an API-restricted `YOUTUBE_API_KEY` as a server-only Pages secret.
 5. For CAPTCHA, deploy `VITE_TURNSTILE_SITE_KEY` first, then enable **Turnstile by Cloudflare** in Supabase Auth with the matching secret. The site key is public; the secret stays in Supabase.
+6. For GIF search, create a dedicated Web API app in [GIPHY Developers](https://developers.giphy.com/dashboard/) and set `VITE_GIPHY_API_KEY` in Pages before rebuilding. GIPHY requires direct browser requests, so this key is public. Provider usage limits apply. Search uses a G content rating; chat stores GIF identifiers and resolves current media when viewed. Without a key, direct GIF-link sharing remains available.
 
 Local Vite serves the frontend; the search endpoint runs on Cloudflare Pages. Search has per-guest limits and a shared 80-request daily ceiling; pasting video links remains available.
 

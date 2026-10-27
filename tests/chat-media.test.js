@@ -5,7 +5,7 @@ import { getGifUrl } from "../src/lib/chat-media.js";
 test("GIF messages accept only direct HTTPS media from approved providers", () => {
   assert.equal(
     getGifUrl("https://media.giphy.com/media/test/giphy.gif?tracking=1#x"),
-    "https://media.giphy.com/media/test/giphy.gif",
+    "https://media.giphy.com/media/test/giphy.gif?tracking=1#x",
   );
   assert.equal(
     getGifUrl(" https://media2.giphy.com/media/test/giphy.gif "),

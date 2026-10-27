@@ -1,14 +1,38 @@
-import { useState } from "react";
-import { getGifUrl } from "../lib/chat-media.js";
+import { useEffect, useState } from "react";
+import { getGifUrl, getGiphyId } from "../lib/chat-media.js";
+import { gifRendition, requestGiphy } from "../lib/giphy.js";
 
 export default function GifMessage({ text }) {
-  const url = getGifUrl(text);
+  const directUrl = getGifUrl(text);
+  const id = getGiphyId(text);
+  const [resolvedUrl, setResolvedUrl] = useState(null);
   const [visible, setVisible] = useState(false);
   const [failed, setFailed] = useState(false);
-  if (!url) return <p>{text}</p>;
+  useEffect(() => {
+    if (!visible || !id) return;
+    const controller = new AbortController();
+    setResolvedUrl(null);
+    requestGiphy(id, {}, { signal: controller.signal })
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        const url = gifRendition(result.data);
+        if (!url) throw new Error("GIF unavailable");
+        setResolvedUrl(url);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setFailed(true);
+          setVisible(false);
+        }
+      });
+    return () => controller.abort();
+  }, [visible, id]);
+  if (!directUrl && !id) return <p>{text}</p>;
+  const url = directUrl || resolvedUrl;
   return (
     <div className="chat-gif-message">
-      {visible && !failed && (
+      {visible && !failed && !url && <small role="status">Loading GIF…</small>}
+      {visible && !failed && url && (
         <img
           src={url}
           alt="Shared animated GIF"
@@ -20,6 +44,7 @@ export default function GifMessage({ text }) {
           }}
         />
       )}
+      {id && <small>Powered by GIPHY</small>}
       {failed && <small>GIF unavailable. You can try loading it again.</small>}
       <button
         type="button"

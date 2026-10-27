@@ -8,7 +8,8 @@ import {
   useState,
 } from "react";
 import GifMessage from "./GifMessage.jsx";
-import { getGifUrl } from "../lib/chat-media.js";
+import GifSearch from "./GifSearch.jsx";
+import { getGifUrl, getGiphyId } from "../lib/chat-media.js";
 const EmojiPicker = lazy(() => import("emoji-picker-react"));
 export default function Chat({ messages, name, dispatch, disabled }) {
   const [text, setText] = useState(""),
@@ -59,7 +60,12 @@ export default function Chat({ messages, name, dispatch, disabled }) {
     await sendContent(text.trim());
   }
   async function sendContent(content, isGif = false) {
-    if (!content || disabled || pending || (isGif && !getGifUrl(content)))
+    if (
+      !content ||
+      disabled ||
+      pending ||
+      (isGif && !getGifUrl(content) && !getGiphyId(content))
+    )
       return;
     setPending(true);
     const ok = await dispatch({
@@ -200,39 +206,46 @@ export default function Chat({ messages, name, dispatch, disabled }) {
             role="group"
             aria-label="Share a GIF"
           >
-            <label htmlFor={pickerId + "-gif"}>Share a GIF</label>
-            <p>Paste a direct .gif link from Giphy or Tenor.</p>
-            <input
-              id={pickerId + "-gif"}
-              type="url"
-              maxLength={500}
-              value={gifLink}
-              placeholder="https://media.giphy.com/media/…/giphy.gif"
-              onChange={(event) => setGifLink(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  sendContent(getGifUrl(gifLink), true);
-                }
-              }}
+            <GifSearch
+              disabled={disabled || pending}
+              onSelect={(url) => sendContent(url, true)}
             />
-            {gifLink && !getGifUrl(gifLink) && (
-              <small role="status">
-                Use an HTTPS .gif link hosted by Giphy or Tenor.
+            <details>
+              <summary>Or paste a GIF link</summary>
+              <label htmlFor={pickerId + "-gif"}>GIF link</label>
+              <p>Paste a direct .gif link from Giphy or Tenor.</p>
+              <input
+                id={pickerId + "-gif"}
+                type="url"
+                maxLength={500}
+                value={gifLink}
+                placeholder="https://media.giphy.com/media/…/giphy.gif"
+                onChange={(event) => setGifLink(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    sendContent(getGifUrl(gifLink), true);
+                  }
+                }}
+              />
+              {gifLink && !getGifUrl(gifLink) && (
+                <small role="status">
+                  Use an HTTPS .gif link hosted by Giphy or Tenor.
+                </small>
+              )}
+              <button
+                type="button"
+                className="primary"
+                disabled={!getGifUrl(gifLink)}
+                onClick={() => sendContent(getGifUrl(gifLink), true)}
+              >
+                Send GIF ↑
+              </button>
+              <small>
+                GIFs load from their provider when someone taps View GIF.
               </small>
-            )}
-            <button
-              type="button"
-              className="primary"
-              disabled={!getGifUrl(gifLink)}
-              onClick={() => sendContent(getGifUrl(gifLink), true)}
-            >
-              Send GIF ↑
-            </button>
-            <small>
-              GIFs load from their provider when someone taps View GIF.
-            </small>
+            </details>
           </div>
         )}
         <label>
