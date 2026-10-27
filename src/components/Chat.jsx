@@ -1,7 +1,71 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useRef, useState } from "react";
+const emojis = [
+  ["😀", "Grinning"],
+  ["😂", "Laughing"],
+  ["🥹", "Touched"],
+  ["🥰", "Loved"],
+  ["😍", "Heart eyes"],
+  ["😎", "Cool"],
+  ["🥳", "Celebrating"],
+  ["🤔", "Thinking"],
+  ["😭", "Crying"],
+  ["😮", "Surprised"],
+  ["😴", "Sleepy"],
+  ["🫶", "Heart hands"],
+  ["❤️", "Heart"],
+  ["💜", "Purple heart"],
+  ["✨", "Sparkles"],
+  ["🔥", "Fire"],
+  ["👍", "Thumbs up"],
+  ["👏", "Clapping"],
+  ["🙌", "Hands raised"],
+  ["👋", "Waving"],
+  ["🎧", "Headphones"],
+  ["🎵", "Music"],
+  ["🎶", "Musical notes"],
+  ["🎤", "Microphone"],
+  ["🎬", "Movie"],
+  ["🍿", "Popcorn"],
+  ["💃", "Dancing"],
+  ["🕺", "Dancer"],
+  ["🌙", "Moon"],
+  ["☕", "Coffee"],
+  ["🤝", "Handshake"],
+  ["💯", "Hundred"],
+];
 export default function Chat({ messages, name, dispatch, disabled }) {
   const [text, setText] = useState(""),
-    [pending, setPending] = useState(false);
+    [pending, setPending] = useState(false),
+    [emojiOpen, setEmojiOpen] = useState(false);
+  const input = useRef(null),
+    composer = useRef(null),
+    emojiToggle = useRef(null);
+  const pickerId = useId();
+  const picker = useRef(null);
+  useEffect(() => {
+    if (!emojiOpen) return;
+    picker.current
+      ?.querySelector("button:not(:disabled)")
+      ?.focus({ preventScroll: true });
+    const closeOutside = (event) => {
+      if (!composer.current?.contains(event.target)) setEmojiOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, [emojiOpen]);
+  function insertEmoji(emoji) {
+    const start = input.current.selectionStart,
+      end = input.current.selectionEnd;
+    if (text.length - (end - start) + emoji.length > 500) return;
+    setText(text.slice(0, start) + emoji + text.slice(end));
+    requestAnimationFrame(() => {
+      input.current?.focus();
+      input.current?.setSelectionRange(
+        start + emoji.length,
+        start + emoji.length,
+      );
+    });
+  }
   const list = useRef(null),
     follow = useRef(true);
   useEffect(() => {
@@ -22,6 +86,7 @@ export default function Chat({ messages, name, dispatch, disabled }) {
     });
     if (ok) {
       setText("");
+      setEmojiOpen(false);
       follow.current = true;
     }
     setPending(false);
@@ -90,10 +155,60 @@ export default function Chat({ messages, name, dispatch, disabled }) {
           </div>
         )}
       </div>
-      <form onSubmit={send} className="chat-composer">
+      <form
+        onSubmit={send}
+        className="chat-composer"
+        ref={composer}
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && emojiOpen) {
+            event.preventDefault();
+            setEmojiOpen(false);
+            emojiToggle.current?.focus();
+          }
+        }}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget))
+            setEmojiOpen(false);
+        }}
+      >
+        {emojiOpen && !disabled && !pending && (
+          <div
+            className="chat-emoji-picker"
+            ref={picker}
+            id={pickerId}
+            role="group"
+            aria-label="Choose an emoji"
+          >
+            <div className="chat-emoji-heading">
+              <strong>A little reaction</strong>
+              <span>Emojis</span>
+            </div>
+            <div className="chat-emoji-grid">
+              {emojis.map(([emoji, label]) => (
+                <button
+                  type="button"
+                  key={emoji}
+                  aria-label={label}
+                  title={label}
+                  disabled={
+                    text.length -
+                      ((input.current?.selectionEnd ?? 0) -
+                        (input.current?.selectionStart ?? 0)) +
+                      emoji.length >
+                    500
+                  }
+                  onClick={() => insertEmoji(emoji)}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <label>
           Message
           <textarea
+            ref={input}
             rows={2}
             disabled={pending}
             maxLength={500}
@@ -113,12 +228,29 @@ export default function Chat({ messages, name, dispatch, disabled }) {
             }}
           />
         </label>
-        <button
-          className="primary"
-          disabled={disabled || pending || !text.trim()}
-        >
-          {pending ? "Sending…" : "Send ↑"}
-        </button>
+        <div className="chat-compose-actions">
+          <button
+            type="button"
+            className="chat-emoji-toggle"
+            ref={emojiToggle}
+            aria-label="Choose an emoji"
+            aria-expanded={emojiOpen && !disabled && !pending}
+            aria-controls={
+              emojiOpen && !disabled && !pending ? pickerId : undefined
+            }
+            disabled={disabled || pending}
+            title="Emojis"
+            onClick={() => setEmojiOpen(!emojiOpen)}
+          >
+            <span aria-hidden="true">☺</span>
+          </button>
+          <button
+            className="primary"
+            disabled={disabled || pending || !text.trim()}
+          >
+            {pending ? "Sending…" : "Send ↑"}
+          </button>
+        </div>
       </form>
       <div className="chat-footer">
         <small>Visible to everyone in this room</small>
