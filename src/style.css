@@ -2568,3 +2568,8 @@ button:hover:not(:disabled) {
 .gif-source-tabs button[aria-pressed="true"] { background: #c4b5fd; color: #181b2d; }
 .gif-search-results.builtin-reactions { max-height: 260px; }
 .builtin-reactions img { height: auto; aspect-ratio: 5 / 3; }
+.sleep-timer { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; padding: 12px; border: 1px solid #34394e; border-radius: 12px; }
+.sleep-timer label { font-size: 12px; font-weight: 600; }
+.sleep-timer select { width: auto; max-width: 100%; padding: 8px; background: #1b2030; color: #ecebff; border: 1px solid #444b66; border-radius: 8px; font: inherit; font-size: 12px; }
+.sleep-timer span { font-size: 12px; color: #c4b5fd; }
+.sleep-timer small { flex-basis: 100%; font-size: 11px; color: #aab4cb; }

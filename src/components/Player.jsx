@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { formatTime, targetPosition } from "../lib/model";
 import { playbackDecision, resyncDecision } from "../lib/playerSync";
+import { sleepTimerDue } from "../lib/sleepTimer";
 let api;
 function youtube() {
   return (api ??= new Promise((resolve, reject) => {
@@ -61,6 +62,46 @@ export default function Player({
     return () => clearTimeout(timer);
   }, [resyncing]);
   const key = state.current?.key;
+  const sleepTimer = useRef(null),
+    sleeping = useRef(false);
+  const [sleep, setSleep] = useState(null),
+    [asleep, setAsleep] = useState(false),
+    [sleepNow, setSleepNow] = useState(Date.now());
+  function checkSleep(ended = false) {
+    if (
+      !sleeping.current &&
+      sleepTimerDue(
+        sleepTimer.current,
+        Date.now(),
+        latest.current.state.current?.key,
+        ended,
+      )
+    ) {
+      sleeping.current = true;
+      sleepTimer.current = null;
+      setSleep(null);
+      setAsleep(true);
+      suppress();
+      player.current?.pauseVideo();
+      latest.current.notify(
+        "Sleep timer finished. Playback paused on this device only.",
+      );
+    }
+    return sleeping.current;
+  }
+  useEffect(() => {
+    if (!sleep) return;
+    const tick = () => {
+      setSleepNow(Date.now());
+      checkSleep();
+    };
+    const timer = setInterval(tick, 1000);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, [sleep]);
   const scheduled = Date.now() + offset < state.at;
   function suppress() {
     suppressed.current = Date.now() + 1000;
@@ -68,6 +109,7 @@ export default function Player({
     nativeSeek.current = null;
   }
   function transport(playing, position, seek = false) {
+    if (checkSleep()) return;
     resyncUntil.current = 0;
     const current = latest.current;
     if (
@@ -135,6 +177,10 @@ export default function Player({
             },
             onStateChange: (e) => {
               if (!active) return;
+              if (checkSleep(e.data === 0)) {
+                if (e.data === 1) player.current?.pauseVideo();
+                return;
+              }
               setBuffering(e.data === 3);
               if (e.data === 3) {
                 const previous = sample.current;
@@ -209,6 +255,10 @@ export default function Player({
   useEffect(() => {
     if (!ready) return;
     const p = player.current;
+    if (checkSleep()) {
+      p.pauseVideo();
+      return;
+    }
     resyncUntil.current = 0;
     setResyncing(false);
     suppress();
@@ -232,6 +282,7 @@ export default function Player({
       });
     }
     const apply = () => {
+      if (checkSleep()) return;
       suppress();
       const position = targetPosition(state, Date.now() + offset);
       if (Math.abs(p.getCurrentTime() - position) > 0.25)
@@ -252,6 +303,10 @@ export default function Player({
       const p = player.current,
         c = latest.current;
       if (!p || !c.state.current) return;
+      if (checkSleep()) {
+        if (p.getPlayerState() === 1) p.pauseVideo();
+        return;
+      }
       const position = p.getCurrentTime() || 0,
         ps = p.getPlayerState(),
         now = Date.now() + c.offset;
@@ -302,6 +357,7 @@ export default function Player({
       else sample.current = { position, at: now, playing: ps === 1 };
     }, 750);
     const visible = () => {
+      if (checkSleep()) return;
       if (!document.hidden) {
         sample.current = null;
         if (
@@ -361,6 +417,7 @@ export default function Player({
           This device needs a tap before it can play sound.{" "}
           <button
             onClick={() => {
+              if (checkSleep()) return;
               suppress();
               player.current?.seekTo(
                 targetPosition(state, Date.now() + offset),
@@ -386,7 +443,9 @@ export default function Player({
           max={duration || 1}
           step="1"
           value={Math.min(draft ?? time, duration || 1)}
-          disabled={!ready || !key || disabled || scheduled || !duration}
+          disabled={
+            !ready || !key || disabled || scheduled || !duration || asleep
+          }
           onChange={(e) => setDraft(Number(e.target.value))}
           onPointerUp={(e) => seek(e.currentTarget.value)}
           onKeyUp={(e) => {
@@ -411,7 +470,7 @@ export default function Player({
       </div>
       <div className="transport">
         <button
-          disabled={!key || !ready || disabled || scheduled}
+          disabled={!key || !ready || disabled || scheduled || asleep}
           onClick={() => {
             const p = player.current;
             suppress();
@@ -421,7 +480,9 @@ export default function Player({
           {state.playing ? "Ⅱ Pause" : "▶ Play"}
         </button>
         <button
-          disabled={(!key && !state.queue.length) || disabled || scheduled}
+          disabled={
+            (!key && !state.queue.length) || disabled || scheduled || asleep
+          }
           onClick={() =>
             onAction({
               type: "skip",
@@ -432,7 +493,7 @@ export default function Player({
           {key ? "Next ↦" : "Start playlist ▶"}
         </button>
         <button
-          disabled={!ready || !key || scheduled || resyncing}
+          disabled={!ready || !key || scheduled || resyncing || asleep}
           onClick={() => {
             suppress();
             resyncUntil.current = Date.now() + 6000;
@@ -453,13 +514,13 @@ export default function Player({
           <summary>More controls</summary>
           <div className="more-controls-list">
             <button
-              disabled={!key || !ready || disabled || scheduled}
+              disabled={!key || !ready || disabled || scheduled || asleep}
               onClick={() => seek(0)}
             >
               ↺ Restart video
             </button>
             <button
-              disabled={!key || disabled || scheduled}
+              disabled={!key || disabled || scheduled || asleep}
               onClick={() =>
                 onAction({ type: "previous", payload: { key, at: state.at } })
               }
@@ -467,7 +528,7 @@ export default function Player({
               ↤ Previous
             </button>
             <button
-              disabled={!state.queue.length || disabled || scheduled}
+              disabled={!state.queue.length || disabled || scheduled || asleep}
               onClick={() =>
                 onAction({
                   type: "restart",
@@ -480,6 +541,78 @@ export default function Player({
             <button onClick={fullScreen}>⛶ Full screen</button>
           </div>
         </details>
+      </div>
+      <div className="sleep-timer">
+        <label htmlFor="sleep-timer">☾ Sleep timer</label>
+        <select
+          id="sleep-timer"
+          value={
+            sleep
+              ? sleep.mode === "end"
+                ? "end"
+                : String(sleep.minutes)
+              : "off"
+          }
+          disabled={!key || asleep}
+          onChange={(event) => {
+            const value = event.target.value;
+            const timer =
+              value === "off"
+                ? null
+                : value === "end"
+                  ? { mode: "end", key }
+                  : {
+                      mode: "time",
+                      minutes: Number(value),
+                      until: Date.now() + Number(value) * 60000,
+                    };
+            sleepTimer.current = timer;
+            setSleep(timer);
+            setSleepNow(Date.now());
+          }}
+        >
+          <option value="off">Off</option>
+          {[15, 30, 45, 60, 90].map((minutes) => (
+            <option key={minutes} value={minutes}>
+              {minutes} minutes
+            </option>
+          ))}
+          <option value="end">End of this video</option>
+        </select>
+        {sleep && (
+          <span role="status">
+            {sleep.mode === "end"
+              ? "Pauses when this video ends or changes"
+              : `${formatTime(Math.ceil(Math.max(0, sleep.until - sleepNow) / 1000))} remaining`}
+          </span>
+        )}
+        {asleep && (
+          <button
+            disabled={!ready || !key}
+            onClick={() => {
+              sleeping.current = false;
+              setAsleep(false);
+              suppress();
+              const position = targetPosition(state, Date.now() + offset);
+              if (loaded.current !== key) {
+                loaded.current = key;
+                player.current?.cueVideoById({
+                  videoId: state.current.id,
+                  startSeconds: position,
+                });
+              } else player.current?.seekTo(position, true);
+              if (state.playing) player.current?.playVideo();
+              else player.current?.pauseVideo();
+            }}
+          >
+            Resume this device
+          </button>
+        )}
+        <small>
+          {asleep
+            ? "Sleep timer finished. This device is paused."
+            : "Only affects this device. Others keep listening. Leaving or reloading clears the timer."}
+        </small>
       </div>
       {resyncing ? (
         <p className="recovery-status" role="status">
