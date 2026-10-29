@@ -253,7 +253,7 @@ export default function Player({
     };
   }, [attempt]);
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !player.current) return;
     const p = player.current;
     if (checkSleep()) {
       p.pauseVideo();
@@ -298,7 +298,7 @@ export default function Player({
     }
   }, [key, state.playing, state.position, state.at, ready, offset]);
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !player.current) return;
     const timer = setInterval(() => {
       const p = player.current,
         c = latest.current;
