@@ -2599,3 +2599,38 @@ body:has(.shell[data-room-theme="cinema"]) { background: radial-gradient(ellipse
 @media (max-width: 480px) { .quick-reaction-buttons > span { flex-basis: 100%; } .quick-reaction-buttons button { flex: 1; } }
 .giphy-attribution img { display: block; width: 140px; max-width: 100%; height: auto; }
 .gif-search-results .gif-creator { display: block; width: 100%; margin: 0; padding: 4px; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Photographic room settings, isolated from the landing page. */
+.shell[data-room-active="true"] { isolation: isolate; min-height: 100dvh; }
+.room-ambience { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; background: #10131e; }
+.room-ambience picture, .room-ambience img { display: block; width: 100%; height: 100%; }
+.room-ambience img { object-fit: cover; object-position: center; animation: scene-arrive .65s ease-out; }
+.room-ambience::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #090c1699, #090c1640 35%, #090c168c 80%, #090c16db); }
+.ambience-light { position: absolute; inset: 0; background: radial-gradient(ellipse at 15% 30%, #b7b1fc25, transparent 65%); animation: ambience-breathe 12s ease-in-out infinite alternate; }
+[data-room-theme="cafe"] .ambience-light { background: radial-gradient(ellipse at 80% 15%, #ffc17730, transparent 65%); }
+[data-room-theme="cinema"] .ambience-light { background: conic-gradient(from 235deg at 92% 8%, transparent, #d6c7ff18 12deg, transparent 28deg); }
+.shell[data-room-active="true"] > header { border-color: #ffffff20; }
+.shell[data-room-active="true"] .roomhead { padding-block: 26px; }
+.shell[data-room-active="true"] .workspace .panel { background: linear-gradient(135deg, var(--room-glow), transparent 60%), color-mix(in srgb, var(--room-surface) 90%, transparent); border-color: color-mix(in srgb, var(--room-accent) 22%, transparent); box-shadow: 0 16px 60px #0004; }
+.room-theme-picker { min-width: 230px; padding: 12px 14px; border: 1px solid #ffffff24; border-radius: 14px; background: #111420b8; gap: 8px; }
+.room-theme-picker > label { display: flex; gap: 16px; justify-content: space-between; color: var(--room-accent); font-size: 9px; letter-spacing: .12em; }
+.room-theme-picker > label span { color: #bdc1ce; font-size: 10px; letter-spacing: 0; }
+.room-theme-control { display: flex; align-items: center; gap: 10px; }
+.scene-swatch { width: 44px; height: 34px; flex-shrink: 0; background-size: cover; background-position: center; border-radius: 7px; border: 1px solid #ffffff30; }
+.scene-swatch-midnight { background-image: url('/themes/midnight-mobile.webp'); }
+.scene-swatch-cafe { background-image: url('/themes/cafe-mobile.webp'); }
+.scene-swatch-cinema { background-image: url('/themes/cinema-mobile.webp'); }
+.room-theme-picker select { flex: 1; min-width: 0; background: #171923; border-color: #ffffff25; font-size: 13px; }
+.room-mood { color: #d2cfda; font-size: 10px; line-height: 1.5; }
+@keyframes scene-arrive { from { opacity: .3; } to { opacity: 1; } }
+@keyframes ambience-breathe { from { opacity: .4; } to { opacity: 1; } }
+@media (max-width: 700px) {
+  .shell[data-room-active="true"] { padding-inline: 4%; }
+  .shell[data-room-active="true"] .roomhead { padding-block: 20px; }
+  .room-actions .room-theme-picker { flex-basis: 100%; width: 100%; min-width: 0; box-sizing: border-box; }
+  .room-ambience::after { background: linear-gradient(180deg, #090c1690, #090c164a 40%, #090c16b0); }
+}
+@media (prefers-reduced-motion: reduce) { .room-ambience img, .ambience-light { animation: none; } }
+.room-actions > button { align-self: center; }
+.scene-swatch-cinema { background-image: url('/themes/cinema.webp'); }
+[data-room-theme="cinema"] .room-ambience::after { background: linear-gradient(180deg, #090c1650, #090c1620 35%, #090c1660 80%, #090c1690); }

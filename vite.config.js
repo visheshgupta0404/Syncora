@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          globPatterns: ["**/*.{js,css,html,svg,png,gif}"],
+          globPatterns: ["**/*.{js,css,html,svg,png,gif}", "themes/*.webp"],
           navigateFallback: "index.html",
           navigateFallbackDenylist: [/^\/api\//],
         },

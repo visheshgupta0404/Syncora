@@ -127,7 +127,14 @@ function App() {
       ? `${location.origin}${location.pathname}#room=${room.code}`
       : "";
   return (
-    <div className="shell" data-room-theme={room ? roomTheme : "midnight"}>
+    <div className="shell" data-room-theme={room ? roomTheme : "midnight"} data-room-active={Boolean(room)}>
+      {room && <div className="room-ambience" aria-hidden="true">
+        <picture key={roomTheme}>
+          <source media="(max-width: 600px)" srcSet={`/themes/${roomTheme}-mobile.webp`} />
+          <img src={`/themes/${roomTheme}.webp`} alt="" />
+        </picture>
+        <div className="ambience-light" />
+      </div>}
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
