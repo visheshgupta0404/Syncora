@@ -52,10 +52,54 @@ export default function Chat({ messages, name, dispatch, disabled }) {
   }
   const list = useRef(null),
     follow = useRef(true);
+  const seen = useRef(new Set(messages.map((message) => message.id)));
+  const [unread, setUnread] = useState(0);
+  function jumpToLatest() {
+    follow.current = true;
+    setUnread(0);
+    list.current?.scrollTo({ top: list.current.scrollHeight });
+  }
   useEffect(() => {
-    if (follow.current)
-      list.current?.scrollTo({ top: list.current.scrollHeight });
-  }, [messages.length, messages.at(-1)?.id]);
+    const added = messages.filter((message) => !seen.current.has(message.id)).length;
+    seen.current = new Set(messages.map((message) => message.id));
+    if (follow.current) jumpToLatest();
+    else if (added) setUnread((count) => count + added);
+  }, [messages]);
+  useEffect(() => {
+    // GIFs and images can grow after the message itself arrives.
+    if (!list.current || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (follow.current) list.current?.scrollTo({ top: list.current.scrollHeight });
+    });
+    observer.observe(list.current);
+    for (const message of list.current.querySelectorAll(".chat-message")) observer.observe(message);
+    return () => observer.disconnect();
+  }, [messages]);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    let frame;
+    const update = () => {
+      const focused = composer.current?.contains(document.activeElement) && matchMedia("(max-width: 700px)").matches;
+      composer.current?.closest(".chat")?.classList.toggle("keyboard-open", Boolean(focused));
+      if (focused) {
+        composer.current?.closest(".chat")?.style.setProperty("--chat-viewport", `${viewport?.height || innerHeight}px`);
+        composer.current?.scrollIntoView({ block: "nearest" });
+      }
+    };
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    };
+    viewport?.addEventListener("resize", schedule);
+    document.addEventListener("focusin", schedule);
+    document.addEventListener("focusout", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      viewport?.removeEventListener("resize", schedule);
+      document.removeEventListener("focusin", schedule);
+      document.removeEventListener("focusout", schedule);
+    };
+  }, []);
   async function send(e) {
     e.preventDefault();
     await sendContent(text.trim());
@@ -81,7 +125,10 @@ export default function Chat({ messages, name, dispatch, disabled }) {
       },
     });
     if (ok) {
-      if (!isGif) setText("");
+      if (!isGif) {
+        setText((draft) => draft.trim() === content ? "" : draft);
+        input.current?.focus({ preventScroll: true });
+      }
       setGifLink("");
       setGifOpen(false);
       setEmojiOpen(false);
@@ -107,6 +154,7 @@ export default function Chat({ messages, name, dispatch, disabled }) {
           const el = e.currentTarget;
           follow.current =
             el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+          if (follow.current) setUnread(0);
         }}
       >
         {messages.length ? (
@@ -153,6 +201,7 @@ export default function Chat({ messages, name, dispatch, disabled }) {
           </div>
         )}
       </div>
+      {unread > 0 && <button className="chat-new-messages" type="button" onClick={jumpToLatest}>{unread} new {unread === 1 ? "message" : "messages"} ↓</button>}
       <form
         onSubmit={send}
         className="chat-composer"
@@ -250,7 +299,7 @@ export default function Chat({ messages, name, dispatch, disabled }) {
                 Send GIF ↑
               </button>
               <small>
-                GIFs load from their provider when someone taps View GIF.
+                GIFs load automatically as they come into view. Reduced-motion settings are respected.
               </small>
             </details>
           </div>
@@ -260,7 +309,6 @@ export default function Chat({ messages, name, dispatch, disabled }) {
           <textarea
             ref={input}
             rows={2}
-            disabled={pending}
             maxLength={500}
             required
             value={text}

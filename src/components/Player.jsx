@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { formatTime, targetPosition } from "../lib/model";
 import { playbackDecision, resyncDecision } from "../lib/playerSync";
 import { sleepTimerDue } from "../lib/sleepTimer";
+import { playbackError } from "../lib/roomFeedback";
 let api;
 function youtube() {
   return (api ??= new Promise((resolve, reject) => {
@@ -170,9 +171,8 @@ export default function Player({
             },
             onError: (e) => {
               if (active) {
-                setError(
-                  `YouTube cannot play this video (${e.data}). It may be unavailable or disallow embeds. Skip it or try another video.`,
-                );
+                setBuffering(false);
+                setError(playbackError(e.data));
               }
             },
             onStateChange: (e) => {
@@ -410,6 +410,10 @@ export default function Player({
         <div className="note" role="alert">
           {error}{" "}
           <button onClick={() => setAttempt((n) => n + 1)}>Retry player</button>
+          {key && state.queue.some((item) => item.key !== key) && (
+            <button disabled={disabled || scheduled || asleep} onClick={() => onAction({ type: "skip", payload: { key, at: state.at } })}>Skip for room</button>
+          )}
+          {state.current && <a href={`https://www.youtube.com/watch?v=${state.current.id}`} target="_blank" rel="noopener noreferrer">Open on YouTube ↗</a>}
         </div>
       ) : null}
       {blocked ? (

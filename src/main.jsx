@@ -19,6 +19,7 @@ import Install from "./components/Install";
 import MemoryScene from "./components/MemoryScene";
 import QuickReactions from "./components/QuickReactions";
 import RoomTheme from "./components/RoomTheme";
+import { connectionFeedback } from "./lib/roomFeedback";
 import "./style.css";
 
 class ErrorBoundary extends Component {
@@ -68,6 +69,19 @@ function App() {
     { room, state, busy, status, online, offset, presence, dispatch } = session;
   const demo = room?.id === "demo",
     disabled = !!room && !demo && (!online || busy);
+  const connection = connectionFeedback(status, online, demo);
+  const messageIds = useRef(null);
+  const [unreadChat, setUnreadChat] = useState(0);
+  useEffect(() => {
+    const previous = messageIds.current;
+    const ids = new Set(state.messages.map((message) => message.id));
+    if (tab === "chat" || previous?.room !== room?.id) setUnreadChat(0);
+    else if (previous) {
+      const added = [...ids].filter((id) => !previous.ids.has(id)).length;
+      if (added) setUnreadChat((count) => count + added);
+    }
+    messageIds.current = { room: room?.id, ids };
+  }, [room?.id, state.messages, tab]);
   useEffect(() => {
     save("name", name);
   }, [name]);
@@ -253,7 +267,10 @@ function App() {
               <h1>
                 A moment, shared<span className="dot">.</span>
               </h1>
-              <p role="status">{status}</p>
+              <div className={`room-connection ${connection.tone}`} role="status">
+                <strong><span aria-hidden="true">●</span> {connection.label}</strong>
+                <span>{connection.detail}</span>
+              </div>
               {!demo ? (
                 <div
                   className="participants"
@@ -408,7 +425,7 @@ function App() {
                 >
                   <span className="desktop-label">Conversation</span>
                   <span className="mobile-label">Chat</span>{" "}
-                  <b>{state.messages.length}</b>
+                  <b aria-label={unreadChat ? `${unreadChat} unread messages` : `${state.messages.length} messages`}>{unreadChat ? `${unreadChat} new` : state.messages.length}</b>
                 </button>
               </nav>
               <div hidden={tab !== "search"}>
@@ -419,15 +436,17 @@ function App() {
                   disabled={disabled}
                 />
               </div>
-              {tab === "queue" ? (
+              <div hidden={tab !== "queue"}>
                 <Queue
+                  key={room.id}
                   queue={state.queue}
                   currentKey={state.current?.key}
                   dispatch={dispatch}
                   notify={setNotice}
                   disabled={disabled}
                 />
-              ) : tab === "chat" ? (
+              </div>
+              {tab === "chat" ? (
                 <Chat
                   messages={state.messages}
                   name={name}
