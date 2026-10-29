@@ -172,7 +172,10 @@ export default function Chat({ messages, name, dispatch, disabled }) {
           }
         }}
         onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) {
+          if (
+            event.relatedTarget &&
+            !event.currentTarget.contains(event.relatedTarget)
+          ) {
             setEmojiOpen(false);
             setGifOpen(false);
           }

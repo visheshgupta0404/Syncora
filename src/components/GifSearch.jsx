@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gifRendition, giphyKey, requestGiphy } from "../lib/giphy.js";
 import { reactions } from "../lib/reactions.js";
+import GiphyBrand from "./GiphyBrand.jsx";
 
 export default function GifSearch({ onSelect, disabled }) {
   const [query, setQuery] = useState("");
@@ -173,17 +174,21 @@ export default function GifSearch({ onSelect, disabled }) {
                         referrerPolicy="no-referrer"
                       />
                     )}
+                    {(item.user?.display_name ||
+                      item.username ||
+                      item.source_tld) && (
+                      <small className="gif-creator">
+                        {String(
+                          item.user?.display_name ||
+                            item.username ||
+                            item.source_tld,
+                        ).slice(0, 80)}
+                      </small>
+                    )}
                   </button>
                 ))}
               </div>
-              <a
-                className="giphy-attribution"
-                href="https://giphy.com/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Powered by GIPHY
-              </a>
+              <GiphyBrand />
             </>
           )}
         </>

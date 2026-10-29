@@ -17,6 +17,8 @@ import Chat from "./components/Chat";
 import Captcha from "./components/Captcha";
 import Install from "./components/Install";
 import MemoryScene from "./components/MemoryScene";
+import QuickReactions from "./components/QuickReactions";
+import RoomTheme from "./components/RoomTheme";
 import "./style.css";
 
 class ErrorBoundary extends Component {
@@ -55,6 +57,7 @@ function App() {
     [captchaReset, setCaptchaReset] = useState(0),
     [hasSession, setHasSession] = useState(false);
   const [tab, setTab] = useState("search");
+  const [roomTheme, setRoomTheme] = useState("midnight");
   const openingRoom = useRef(false);
   const inviteDialog = useRef(null),
     helpDialog = useRef(null),
@@ -124,7 +127,7 @@ function App() {
       ? `${location.origin}${location.pathname}#room=${room.code}`
       : "";
   return (
-    <div className="shell">
+    <div className="shell" data-room-theme={room ? roomTheme : "midnight"}>
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
@@ -278,6 +281,11 @@ function App() {
               ) : null}
             </div>
             <div className="room-actions">
+              <RoomTheme
+                key={room.id}
+                roomId={room.id}
+                onChange={setRoomTheme}
+              />
               {!demo ? (
                 <button onClick={() => inviteDialog.current.showModal()}>
                   Invite people ↗
@@ -318,6 +326,14 @@ function App() {
                 onAction={dispatch}
                 notify={setNotice}
                 offset={offset}
+                disabled={disabled}
+              />
+              <QuickReactions
+                key={room.id}
+                messages={state.messages}
+                offset={offset}
+                name={name}
+                dispatch={dispatch}
                 disabled={disabled}
               />
               <h2>

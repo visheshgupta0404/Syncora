@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { getGifUrl, getGiphyId } from "../lib/chat-media.js";
 import { gifRendition, requestGiphy } from "../lib/giphy.js";
 import { getBuiltinGif } from "../lib/reactions.js";
+import GiphyBrand from "./GiphyBrand.jsx";
 
 export default function GifMessage({ text }) {
   const builtin = getBuiltinGif(text);
   const directUrl = builtin || getGifUrl(text);
   const id = getGiphyId(text);
   const [resolvedUrl, setResolvedUrl] = useState(null);
+  const [credit, setCredit] = useState("");
   const [visible, setVisible] = useState(
     () =>
       Boolean(builtin) &&
@@ -25,6 +27,14 @@ export default function GifMessage({ text }) {
         const url = gifRendition(result.data);
         if (!url) throw new Error("GIF unavailable");
         setResolvedUrl(url);
+        setCredit(
+          String(
+            result.data.user?.display_name ||
+              result.data.username ||
+              result.data.source_tld ||
+              "",
+          ).slice(0, 80),
+        );
       })
       .catch(() => {
         if (!controller.signal.aborted) {
@@ -51,7 +61,8 @@ export default function GifMessage({ text }) {
           }}
         />
       )}
-      {id && <small>Powered by GIPHY</small>}
+      {id && credit && <small>{credit}</small>}
+      {id && <GiphyBrand />}
       {failed && <small>GIF unavailable. You can try loading it again.</small>}
       <button
         type="button"
