@@ -2665,3 +2665,10 @@ body:has(.shell[data-room-theme="cinema"]) { background: radial-gradient(ellipse
   .room-sidebar:has(.keyboard-open) nav { display: none; }
   .chat.keyboard-open { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
 }
+
+@media (max-width: 700px) {
+  .roomhead .room-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: 100%; max-width: none; }
+  .roomhead .room-actions .room-theme-picker { grid-column: 1 / -1; }
+  .roomhead .room-actions > button { width: 100%; min-width: 0; min-height: 44px; padding: 8px 4px; font-size: clamp(9px, 2.6vw, 11px); white-space: nowrap; }
+  .roomhead .room-actions > button:only-of-type { grid-column: 1 / -1; }
+}
