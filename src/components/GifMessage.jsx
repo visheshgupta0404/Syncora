@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getGifUrl, getGiphyId } from "../lib/chat-media.js";
 import { gifRendition, requestGiphy } from "../lib/giphy.js";
 import { getBuiltinGif } from "../lib/reactions.js";
@@ -12,13 +12,29 @@ export default function GifMessage({ text }) {
   const [credit, setCredit] = useState("");
   const [visible, setVisible] = useState(
     () =>
-      Boolean(builtin) &&
       (typeof window === "undefined" ||
         !window.matchMedia("(prefers-reduced-motion: reduce)").matches),
   );
+  const container = useRef(null);
+  const [nearViewport, setNearViewport] = useState(false);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
-    if (!visible || !id) return;
+    if (!container.current || !id) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setNearViewport(true);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setNearViewport(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: "160px" });
+    observer.observe(container.current);
+    return () => observer.disconnect();
+  }, [id]);
+  useEffect(() => {
+    if (!visible || !id || !nearViewport || resolvedUrl) return;
     const controller = new AbortController();
     setResolvedUrl(null);
     requestGiphy(id, {}, { signal: controller.signal })
@@ -43,11 +59,11 @@ export default function GifMessage({ text }) {
         }
       });
     return () => controller.abort();
-  }, [visible, id]);
+  }, [visible, id, nearViewport, resolvedUrl]);
   if (!directUrl && !id) return <p>{text}</p>;
   const url = directUrl || resolvedUrl;
   return (
-    <div className="chat-gif-message">
+    <div className="chat-gif-message" ref={container}>
       {visible && !failed && !url && <small role="status">Loading GIF…</small>}
       {visible && !failed && url && (
         <img
@@ -67,6 +83,7 @@ export default function GifMessage({ text }) {
       <button
         type="button"
         onClick={() => {
+          if (failed && id) setResolvedUrl(null);
           setFailed(false);
           setVisible(!visible);
         }}

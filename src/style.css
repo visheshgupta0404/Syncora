@@ -2611,7 +2611,7 @@ body:has(.shell[data-room-theme="cinema"]) { background: radial-gradient(ellipse
 [data-room-theme="cinema"] .ambience-light { background: conic-gradient(from 235deg at 92% 8%, transparent, #d6c7ff18 12deg, transparent 28deg); }
 .shell[data-room-active="true"] > header { border-color: #ffffff20; }
 .shell[data-room-active="true"] .roomhead { padding-block: 26px; }
-.shell[data-room-active="true"] .workspace .panel { background: linear-gradient(135deg, var(--room-glow), transparent 60%), color-mix(in srgb, var(--room-surface) 90%, transparent); border-color: color-mix(in srgb, var(--room-accent) 22%, transparent); box-shadow: 0 16px 60px #0004; }
+.shell[data-room-active="true"] .workspace .panel { background: linear-gradient(135deg, var(--room-glow), transparent 60%), color-mix(in srgb, var(--room-surface) 64%, transparent); border-color: color-mix(in srgb, var(--room-accent) 26%, transparent); box-shadow: 0 16px 60px #0004; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .room-theme-picker { min-width: 230px; padding: 12px 14px; border: 1px solid #ffffff24; border-radius: 14px; background: #111420b8; gap: 8px; }
 .room-theme-picker > label { display: flex; gap: 16px; justify-content: space-between; color: var(--room-accent); font-size: 9px; letter-spacing: .12em; }
 .room-theme-picker > label span { color: #bdc1ce; font-size: 10px; letter-spacing: 0; }
@@ -2634,3 +2634,5 @@ body:has(.shell[data-room-theme="cinema"]) { background: radial-gradient(ellipse
 .room-actions > button { align-self: center; }
 .scene-swatch-cinema { background-image: url('/themes/cinema.webp'); }
 [data-room-theme="cinema"] .room-ambience::after { background: linear-gradient(180deg, #090c1650, #090c1620 35%, #090c1660 80%, #090c1690); }
+.shell[data-room-active="true"] .chat-bubble { background: color-mix(in srgb, var(--room-surface) 76%, transparent); border-color: #ffffff24; }
+.shell[data-room-active="true"] .room-theme-picker { background: #11142091; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
