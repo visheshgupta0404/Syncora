@@ -2,8 +2,36 @@ import { useEffect, useRef, useState } from "react";
 import { db, measureClock, readRoom, rpc, signIn } from "../lib/backend";
 import { initialState, reduce } from "../lib/model";
 import { readSaved, save } from "../lib/storage";
+import { cleanRooms, rememberRoom } from "../lib/library";
 
 export function useRoom(notify) {
+  const [recentRooms, setRecentRooms] = useState(() =>
+    cleanRooms(readSaved("recentRooms")),
+  );
+  const [userId, setUserId] = useState(null);
+  function storeRooms(next) {
+    if (!save("recentRooms", next))
+      notice.current("Room history could not be saved on this device.");
+    setRecentRooms(next);
+  }
+  function remember(r) {
+    storeRooms(rememberRoom(readSaved("recentRooms", []), r));
+  }
+  function forget(id) {
+    if (readSaved("room")?.id === id) save("room", null);
+    storeRooms(
+      cleanRooms(readSaved("recentRooms", [])).filter((item) => item.id !== id),
+    );
+  }
+  function rename(id, name) {
+    storeRooms(
+      cleanRooms(readSaved("recentRooms", [])).map((item) =>
+        item.id === id
+          ? { ...item, name: name.trim().slice(0, 40) || "My room" }
+          : item,
+      ),
+    );
+  }
   const [room, setRoom] = useState(null),
     [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Not connected"),
@@ -45,6 +73,7 @@ export function useRoom(notify) {
       if (!navigator.onLine)
         throw Error("You are offline. Reconnect before joining.");
       actor.current = await signIn(captchaToken);
+      setUserId(actor.current.id);
       const r = await rpc("open_room", { invite: invite || null });
       if (generation !== epoch.current) return;
       // YouTube's widget reads location.href; remove invite fragments before mounting it.
@@ -52,6 +81,7 @@ export function useRoom(notify) {
       ref.current = null;
       accept(r, generation);
       save("room", { id: r.id, code: r.code });
+      remember(r);
       setStatus("Connecting…");
     } catch (e) {
       notice.current(e.message);
@@ -97,10 +127,12 @@ export function useRoom(notify) {
           return;
         }
         actor.current = session.user;
+        setUserId(session.user.id);
         const r = await rpc("open_room", { invite: saved.code });
         if (active) {
           history.replaceState(null, "", location.pathname);
           accept(r, generation);
+          remember(r);
           setStatus("Reconnecting…");
         }
       } catch (e) {
@@ -148,6 +180,7 @@ export function useRoom(notify) {
       } catch (e) {
         if (!active) return;
         if (e.code === "PGRST116") {
+          forget(id);
           reset();
           notice.current(
             "This room expired or your seat was released. Create or join a room.",
@@ -267,6 +300,7 @@ export function useRoom(notify) {
       setBusy(true);
       try {
         await rpc("leave_room", { room_id: ref.current.id });
+        forget(ref.current.id);
         reset();
       } catch (e) {
         notice.current(e.message);
@@ -274,6 +308,7 @@ export function useRoom(notify) {
         setBusy(false);
       }
     } else {
+      if (ref.current && ref.current.id !== "demo") remember(ref.current);
       const saved =
         ref.current?.id !== "demo"
           ? { id: ref.current?.id, code: ref.current?.code }
@@ -283,6 +318,10 @@ export function useRoom(notify) {
     }
   }
   return {
+    recentRooms,
+    userId,
+    rename,
+    forget,
     room,
     state: room?.state || initialState(),
     busy,

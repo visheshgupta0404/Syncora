@@ -28,6 +28,8 @@ Watch, listen and hang out together in a private room for **up to 6 people**.
 | **Stay together** — catch up with Resync | **Know what's next** — current video and up-next labels |
 | **GIFs and emojis** — search GIPHY or send built-in reactions | **Quick reactions** — share a feeling with the room |
 | **Sleep timer** — pause just your device | **Room themes** — Midnight, Cozy café or Cinema, saved on your device |
+| **Saved playlists** — keep and reuse queues on your device | **Recent rooms** — personal nicknames and rejoin shortcuts |
+| **Host controls** — optional host-only playback and queue edits | **Separate groups** — each room keeps its own chat and queue |
 
 ## Your room in three steps
 

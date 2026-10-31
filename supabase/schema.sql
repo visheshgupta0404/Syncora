@@ -95,11 +95,19 @@ begin
  if action is null or jsonb_typeof(action) <> 'object' or pg_column_size(action) > 4096
  then raise exception 'Invalid command'; end if;
  kind := action->>'type'; p := action->'payload'; s := r.state; q := s->'queue';
+ if kind = 'controls' then
+   if auth.uid() is distinct from r.members[1] then raise exception 'Only the host can change room controls'; end if;
+   if jsonb_typeof(p->'hostOnly') is distinct from 'boolean' then raise exception 'Invalid control setting'; end if;
+ elsif coalesce((s->>'hostOnly')::boolean, false) and kind <> 'chat' and auth.uid() is distinct from r.members[1] then
+   raise exception 'Only the host can change playback or the queue';
+ end if;
  stamp := greatest(floor(extract(epoch from clock_timestamp()) * 1000)::bigint, coalesce((s->>'at')::bigint, 0) + 1);
  if kind in ('play', 'skip', 'previous', 'restart', 'transport') then
  stamp := greatest(floor(extract(epoch from clock_timestamp()) * 1000)::bigint + 1500, coalesce((s->>'at')::bigint, 0) + 1);
  end if;
- if kind = 'add' then
+ if kind = 'controls' then
+ s := s || jsonb_build_object('hostOnly', (p->>'hostOnly')::boolean, 'controlsVersion', 1);
+ elsif kind = 'add' then
  if jsonb_typeof(p) is distinct from 'object' or (p->>'id') is null
  or (p->>'id') !~ '^[A-Za-z0-9_-]{11}$' or (p->>'key') is null
  or length(p->>'key') not between 1 and 64 or length(p->>'title') not between 1 and 120
@@ -280,4 +288,11 @@ begin
 end $$;
 revoke all on function public.reserve_youtube_search() from public,anon;
 grant execute on function public.reserve_youtube_search() to authenticated;
+commit;
+
+-- Host is the first remaining member. Releasing that seat transfers hosting.
+-- Back to lobby does not release a seat or transfer hosting.
+begin;
+alter table public.rooms alter column state set default '{"queue":[],"current":null,"playing":false,"position":0,"at":0,"messages":[],"hostOnly":false,"controlsVersion":1}'::jsonb;
+update public.rooms set state = state || '{"controlsVersion":1}'::jsonb where state->>'controlsVersion' is distinct from '1';
 commit;

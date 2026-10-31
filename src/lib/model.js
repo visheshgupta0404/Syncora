@@ -33,13 +33,20 @@ export const initialState = () => ({
   position: 0,
   at: 0,
   messages: [],
+  hostOnly: false,
+  controlsVersion: 1,
 });
 // Local demo mirrors the database's authoritative command semantics.
 export function reduce(state, { type, payload: p }, now = Date.now()) {
   const s = structuredClone(state);
   const effectiveAt = Math.max(now + SYNC_DELAY_MS, s.at + 1);
   now = Math.max(now, s.at + 1);
-  if (type === "add") {
+  if (type === "controls") {
+    if (typeof p?.hostOnly !== "boolean")
+      throw Error("Invalid control setting");
+    s.hostOnly = p.hostOnly;
+    s.controlsVersion = 1;
+  } else if (type === "add") {
     if (s.queue.length >= 100) throw Error("Queue is full");
     if (
       !/^[\w-]{11}$/.test(p?.id || "") ||

@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import SavedPlaylists from "./SavedPlaylists";
 
-export default function Queue({ queue, currentKey, dispatch, disabled }) {
+export default function Queue({
+  queue,
+  currentKey,
+  dispatch,
+  disabled,
+  notify,
+}) {
   const [removed, setRemoved] = useState(null);
   const [pending, setPending] = useState(false);
   const lock = useRef(false);
@@ -14,7 +21,8 @@ export default function Queue({ queue, currentKey, dispatch, disabled }) {
     lock.current = true;
     setPending(true);
     try {
-      if (await dispatch({ type: "remove", payload: { key: item.key } })) setRemoved(item);
+      if (await dispatch({ type: "remove", payload: { key: item.key } }))
+        setRemoved(item);
     } finally {
       lock.current = false;
       setPending(false);
@@ -26,7 +34,17 @@ export default function Queue({ queue, currentKey, dispatch, disabled }) {
     setPending(true);
     try {
       // Append as a new queue entry; do not resurrect a stale playback command.
-      if (await dispatch({ type: "add", payload: { id: removed.id, title: removed.title, key: crypto.randomUUID() } })) setRemoved(null);
+      if (
+        await dispatch({
+          type: "add",
+          payload: {
+            id: removed.id,
+            title: removed.title,
+            key: crypto.randomUUID(),
+          },
+        })
+      )
+        setRemoved(null);
     } finally {
       lock.current = false;
       setPending(false);
@@ -44,10 +62,20 @@ export default function Queue({ queue, currentKey, dispatch, disabled }) {
         </h2>
         <p>Everyone gets a say in what plays next.</p>
       </div>
-      {removed && <div className="queue-undo" role="status">
-        <span>Removed “{removed.title}”. Undo adds it to the end.</span>
-        <button disabled={disabled || queue.length >= 100} onClick={undo}>Undo</button>
-      </div>}
+      <SavedPlaylists
+        queue={queue}
+        dispatch={dispatch}
+        disabled={disabled}
+        notify={notify}
+      />
+      {removed && (
+        <div className="queue-undo" role="status">
+          <span>Removed “{removed.title}”. Undo adds it to the end.</span>
+          <button disabled={disabled || queue.length >= 100} onClick={undo}>
+            Undo
+          </button>
+        </div>
+      )}
       <div className="queue">
         {queue.length ? (
           queue.map((v, i) => (

@@ -450,7 +450,7 @@ footer {
   .roomhead h1 {
     font-size: 27px;
   }
-  .roomhead > div:last-child {
+  .roomhead > .room-actions {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -2672,3 +2672,19 @@ body:has(.shell[data-room-theme="cinema"]) { background: radial-gradient(ellipse
   .roomhead .room-actions > button { width: 100%; min-width: 0; min-height: 44px; padding: 8px 4px; font-size: clamp(9px, 2.6vw, 11px); white-space: nowrap; }
   .roomhead .room-actions > button:only-of-type { grid-column: 1 / -1; }
 }
+.saved-playlists { margin: 0 18px 18px; padding: 14px; border: 1px solid var(--room-border); border-radius: 12px; background: #111722aa; }
+.saved-playlists summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+.saved-playlists p, .recent-rooms p { font-size: 12px; line-height: 1.6; color: #c2cada; }
+.saved-playlists label, .recent-rooms label, .room-personal-settings label { display: grid; gap: 6px; font-size: 11px; color: #d8deeb; }
+.saved-playlists form { display: grid; gap: 8px; margin-block: 12px; }
+.saved-playlists input, .saved-playlists select, .room-personal-settings input, .host-controls select { box-sizing: border-box; width: 100%; min-width: 0; background: #161d2b; color: #eff0ff; border: 1px solid #ffffff30; border-radius: 8px; padding: 10px; font: inherit; font-size: 13px; }
+.library-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 10px; }
+.library-actions button, .saved-playlists form button { font-size: 12px; padding: 9px; }
+.saved-playlists small, .recent-rooms small, .host-controls small { display: block; font-size: 10px; line-height: 1.6; color: #b8c3d6; }
+.recent-rooms { border-top: 1px solid #ffffff25; margin-top: 18px; padding-top: 12px; }
+.recent-rooms h3 { margin-block: 6px; font-size: 17px; }
+.recent-rooms article { padding: 12px; border: 1px solid #ffffff20; border-radius: 12px; margin-block: 10px; }
+.room-personal-settings { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 18px; padding: 14px 18px; margin-bottom: 18px; background: #10141fb0; border: 1px solid #ffffff20; border-radius: 14px; }
+.host-controls p { font-size: 12px; margin: 0 0 8px; }
+.host-controls small { margin-top: 7px; }
+@media (max-width: 700px) { .room-personal-settings { grid-template-columns: 1fr; gap: 12px; padding: 12px; } .recent-rooms input, .saved-playlists input, .room-personal-settings input, .host-controls select { font-size: 16px; } }

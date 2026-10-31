@@ -594,3 +594,70 @@ test("many guest identities cannot exceed the shared room-creation daily budget"
   await identity(users[1]);
   await assert.rejects(open(), /daily limit/);
 });
+
+test("host-only controls reject guest mutations while preserving chat and transfer safely", async () => {
+  await pg.exec("reset role");
+  await pg.exec(
+    await readFile(
+      new URL(
+        "../supabase/migrations/20261101_host_controls.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  await pg.exec(
+    await readFile(
+      new URL(
+        "../supabase/migrations/20261101_host_controls.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  await identity(users[0]);
+  let r = await open();
+  r = await action(r, "add", track(1));
+  r = await action(r, "controls", { hostOnly: true });
+  await identity(users[1]);
+  r = await open(r.code);
+  for (const [type, payload] of [
+    ["add", track(2)],
+    ["remove", { key: "1" }],
+    ["move", { key: "1", to: 0 }],
+    ["play", { key: "1" }],
+    ["transport", { key: "1", playing: true, position: 0 }],
+    ["skip", {}],
+    ["restart", {}],
+    ["previous", {}],
+    ["controls", { hostOnly: false }],
+  ]) {
+    await assert.rejects(action(r, type, payload), /Only the host/);
+  }
+  r = await action(r, "chat", { name: "Guest", text: "Still here" });
+  assert.equal(r.state.messages.at(-1).text, "Still here");
+  assert.equal(r.state.queue.length, 1);
+  await identity(users[0]);
+  await pg.query("select public.leave_room($1)", [r.id]);
+  await identity(users[1]);
+  r = await action(r, "controls", { hostOnly: false });
+  assert.equal(r.members[0], users[1]);
+  assert.equal(r.state.hostOnly, false);
+  r = await action(r, "add", track(2));
+  assert.equal(r.state.queue.length, 2);
+});
+
+test("one member can rejoin separate groups without mixing queues or messages", async () => {
+  const a = await open();
+  const b = await open();
+  assert.notEqual(a.id, b.id);
+  await action(a, "add", track(1));
+  await action(a, "chat", { name: "Me", text: "Friends only" });
+  const second = await open(b.code);
+  assert.equal(second.state.queue.length, 0);
+  assert.equal(second.state.messages.length, 0);
+  const first = await open(a.code);
+  assert.equal(first.state.queue.length, 1);
+  assert.equal(first.state.messages[0].text, "Friends only");
+  assert.equal(first.members.length, 1);
+});

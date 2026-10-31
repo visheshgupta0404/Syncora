@@ -19,6 +19,8 @@ import Install from "./components/Install";
 import MemoryScene from "./components/MemoryScene";
 import QuickReactions from "./components/QuickReactions";
 import RoomTheme from "./components/RoomTheme";
+import RecentRooms from "./components/RecentRooms";
+import HostControls from "./components/HostControls";
 import { connectionFeedback } from "./lib/roomFeedback";
 import "./style.css";
 
@@ -70,6 +72,8 @@ function App() {
   const demo = room?.id === "demo",
     disabled = !!room && !demo && (!online || busy);
   const connection = connectionFeedback(status, online, demo);
+  const isHost = demo || room?.members?.[0] === session.userId;
+  const controlsDisabled = disabled || (!!state.hostOnly && !isHost);
   const messageIds = useRef(null);
   const [unreadChat, setUnreadChat] = useState(0);
   useEffect(() => {
@@ -141,14 +145,23 @@ function App() {
       ? `${location.origin}${location.pathname}#room=${room.code}`
       : "";
   return (
-    <div className="shell" data-room-theme={room ? roomTheme : "midnight"} data-room-active={Boolean(room)}>
-      {room && <div className="room-ambience" aria-hidden="true">
-        <picture key={roomTheme}>
-          <source media="(max-width: 600px)" srcSet={`/themes/${roomTheme}-mobile.webp`} />
-          <img src={`/themes/${roomTheme}.webp`} alt="" />
-        </picture>
-        <div className="ambience-light" />
-      </div>}
+    <div
+      className="shell"
+      data-room-theme={room ? roomTheme : "midnight"}
+      data-room-active={Boolean(room)}
+    >
+      {room && (
+        <div className="room-ambience" aria-hidden="true">
+          <picture key={roomTheme}>
+            <source
+              media="(max-width: 600px)"
+              srcSet={`/themes/${roomTheme}-mobile.webp`}
+            />
+            <img src={`/themes/${roomTheme}.webp`} alt="" />
+          </picture>
+          <div className="ambience-light" />
+        </div>
+      )}
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
@@ -250,6 +263,13 @@ function App() {
             <button className="link" disabled={busy} onClick={session.demo}>
               Explore the local demo
             </button>
+            <RecentRooms
+              rooms={session.recentRooms}
+              rename={session.rename}
+              forget={session.forget}
+              rejoin={open}
+              disabled={busy || (verificationRequired && !token)}
+            />
             <small>
               {db
                 ? `Private rooms · ${ROOM_CAPACITY} seats · expire after 7 inactive days`
@@ -267,8 +287,13 @@ function App() {
               <h1>
                 A moment, shared<span className="dot">.</span>
               </h1>
-              <div className={`room-connection ${connection.tone}`} role="status">
-                <strong><span aria-hidden="true">●</span> {connection.label}</strong>
+              <div
+                className={`room-connection ${connection.tone}`}
+                role="status"
+              >
+                <strong>
+                  <span aria-hidden="true">●</span> {connection.label}
+                </strong>
                 <span>{connection.detail}</span>
               </div>
               {!demo ? (
@@ -328,6 +353,30 @@ function App() {
               ) : null}
             </div>
           </div>
+          {!demo && (
+            <div className="room-personal-settings">
+              <label>
+                Your room nickname
+                <input
+                  key={room.id}
+                  maxLength={40}
+                  defaultValue={
+                    session.recentRooms.find((item) => item.id === room.id)
+                      ?.name || "My room"
+                  }
+                  onBlur={(event) =>
+                    session.rename(room.id, event.target.value)
+                  }
+                />
+              </label>
+              <HostControls
+                room={room}
+                isHost={isHost}
+                dispatch={dispatch}
+                disabled={disabled}
+              />
+            </div>
+          )}
           {!online && !demo ? (
             <div className="note" role="status">
               You’re offline. Playback may continue locally; shared edits resume
@@ -350,7 +399,7 @@ function App() {
                 onAction={dispatch}
                 notify={setNotice}
                 offset={offset}
-                disabled={disabled}
+                disabled={controlsDisabled}
               />
               <QuickReactions
                 key={room.id}
@@ -425,7 +474,15 @@ function App() {
                 >
                   <span className="desktop-label">Conversation</span>
                   <span className="mobile-label">Chat</span>{" "}
-                  <b aria-label={unreadChat ? `${unreadChat} unread messages` : `${state.messages.length} messages`}>{unreadChat ? `${unreadChat} new` : state.messages.length}</b>
+                  <b
+                    aria-label={
+                      unreadChat
+                        ? `${unreadChat} unread messages`
+                        : `${state.messages.length} messages`
+                    }
+                  >
+                    {unreadChat ? `${unreadChat} new` : state.messages.length}
+                  </b>
                 </button>
               </nav>
               <div hidden={tab !== "search"}>
@@ -433,7 +490,7 @@ function App() {
                   queue={state.queue}
                   dispatch={dispatch}
                   notify={setNotice}
-                  disabled={disabled}
+                  disabled={controlsDisabled}
                 />
               </div>
               <div hidden={tab !== "queue"}>
@@ -443,7 +500,7 @@ function App() {
                   currentKey={state.current?.key}
                   dispatch={dispatch}
                   notify={setNotice}
-                  disabled={disabled}
+                  disabled={controlsDisabled}
                 />
               </div>
               {tab === "chat" ? (
