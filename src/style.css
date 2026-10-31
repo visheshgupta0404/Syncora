@@ -2694,3 +2694,44 @@ body:has(.shell[data-room-theme="cinema"]) { background: radial-gradient(ellipse
 .account-panel p { font-size: 12px; line-height: 1.6; color: #c4cde0; }
 .account-panel [role="alert"] { color: #ffb8b8; }
 .account-panel .google-sign-in { width: 100%; background: #f6f7fa; color: #202633; border-color: #fff; font-weight: 600; margin-top: 10px; }
+
+/* Account entry: quiet typography and a single clear action. */
+.account-panel { position: relative; padding: 0 0 22px; margin-block: 24px; border: 0; border-bottom: 1px solid #ffffff16; border-radius: 0; background: transparent; }
+.account-panel .account-eyebrow { display: block; margin-bottom: 10px; font-size: 9px; line-height: 1.5; letter-spacing: .16em; font-weight: 600; color: #a9a9c9; }
+.account-panel h3 { margin: 0; color: #f2f1fa; font-size: 19px; font-weight: 600; letter-spacing: -.035em; line-height: 1.35; }
+.account-panel .account-description { margin: 8px 0 18px; color: #aeb8cc; font-size: 12px; line-height: 1.65; max-width: 32ch; }
+.account-panel .google-sign-in { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 48px; margin: 0; padding: 12px 18px; border: 1px solid #e2e4eb; border-radius: 10px; background: #fafbfe; color: #252935; font-size: 13px; font-weight: 600; box-shadow: 0 2px 3px #0000000d; transition: background .18s, box-shadow .18s; }
+.account-panel .google-sign-in:hover:not(:disabled) { background: #fff; border-color: #c8d2ec; box-shadow: 0 0 0 3px #c6caff16; }
+.google-sign-in svg { flex-shrink: 0; }
+.account-panel .account-bottomline { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; font-size: 10px; line-height: 1.6; color: #959fb5; }
+.account-panel .account-privacy { color: #b3bdd0; text-decoration: none; font-size: 10px; }
+.account-panel .account-privacy:hover { color: #e7e7ff; text-decoration: underline; }
+.account-profile { display: flex; align-items: center; gap: 11px; }
+.account-avatar { display: grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border: 1px solid #c3b5fd42; border-radius: 50%; background: #c3b5fd16; color: #d6cdff; font-size: 15px; font-weight: 600; }
+.account-identity { flex: 1; min-width: 0; }
+.account-panel .account-identity h3 { font-size: 14px; font-weight: 600; letter-spacing: -.01em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.account-identity > span { display: block; margin-top: 3px; color: #98a5bf; font-size: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.account-panel .account-sync-status { display: flex; align-items: center; gap: 7px; margin: 12px 0 0; font-size: 10px; color: #aab8cd; }
+.account-sync-dot { flex-shrink: 0; width: 5px; height: 5px; border-radius: 50%; background: #96d5b5; }
+.account-sync-status.needs-attention .account-sync-dot { background: #edc187; }
+.account-sync-dot.is-syncing { animation: account-sync-pulse 1.2s ease-in-out infinite; }
+.account-menu { flex-shrink: 0; }
+.account-menu > summary { display: flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 7px; color: #c3c8d9; font-size: 11px; cursor: pointer; list-style: none; border-radius: 8px; }
+.account-menu > summary::-webkit-details-marker { display: none; }
+.account-menu > summary:hover, .account-menu[open] > summary { background: #ffffff09; color: #f2f1fa; }
+.account-menu-content { position: absolute; z-index: 12; top: 48px; right: 0; width: min(270px, 100%); padding: 6px; border: 1px solid #40455c; border-radius: 12px; background: #1b2130; box-shadow: 0 14px 36px #0006; }
+.account-menu-caption { display: block; padding: 10px 10px 6px; font-size: 9px; letter-spacing: .13em; color: #949fb9; }
+.account-panel .account-menu-content button { display: block; width: 100%; min-height: 42px; margin: 0; padding: 10px; border: 0; border-radius: 7px; background: transparent; text-align: left; font-size: 12px; color: #dce0ef; }
+.account-panel .account-menu-content button:hover:not(:disabled) { background: #ffffff0b; }
+.account-menu-content button small { display: block; margin-top: 4px; font-size: 10px; color: #99a7c0; font-weight: 400; line-height: 1.5; }
+.account-panel .account-menu-content .account-sign-out { border-top: 1px solid #ffffff12; border-radius: 0 0 7px 7px; margin-top: 4px; color: #c6bfd6; }
+.shell > .account-panel { max-width: 520px; margin: 24px auto; padding: 20px; border: 1px solid #ffffff18; border-radius: 14px; background: #141b28a8; }
+.shell > .account-panel .account-menu-content { right: 20px; top: 68px; width: min(270px, calc(100% - 40px)); }
+.account-panel .account-error, .account-panel .account-feedback { padding: 10px 12px; margin: 12px 0 0; border: 1px solid #ffffff1c; border-radius: 8px; font-size: 11px; line-height: 1.6; }
+.account-panel .account-feedback { color: #c0dfd0; }
+.account-panel .account-retry { margin-top: 10px; font-size: 12px; padding: 8px 12px; }
+.account-button-spinner { width: 16px; height: 16px; border: 2px solid #25293530; border-top-color: #3e485d; border-radius: 50%; animation: account-button-spin .8s linear infinite; }
+@keyframes account-button-spin { to { transform: rotate(360deg); } }
+@keyframes account-sync-pulse { 50% { opacity: .4; } }
+@media (prefers-reduced-motion: reduce) { .account-button-spinner, .account-sync-dot.is-syncing { animation: none; } }
+@media (max-width: 400px) { .account-panel h3 { font-size: 18px; } .account-panel .account-bottomline { font-size: 9px; } .account-identity > span { font-size: 9px; } }
