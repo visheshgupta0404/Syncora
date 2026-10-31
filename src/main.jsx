@@ -21,6 +21,8 @@ import QuickReactions from "./components/QuickReactions";
 import RoomTheme from "./components/RoomTheme";
 import RecentRooms from "./components/RecentRooms";
 import HostControls from "./components/HostControls";
+import AccountProvider, { useAccount } from "./components/AccountProvider";
+import AccountPanel from "./components/AccountPanel";
 import { connectionFeedback } from "./lib/roomFeedback";
 import "./style.css";
 
@@ -44,6 +46,7 @@ class ErrorBoundary extends Component {
   }
 }
 function App() {
+  const account = useAccount();
   const [notice, setNoticeState] = useState(null),
     [name, setName] = useState(() => readSaved("name", "You"));
   const setNotice = useCallback(
@@ -67,7 +70,7 @@ function App() {
     releaseDialog = useRef(null),
     sidebar = useRef(null),
     watchPanel = useRef(null);
-  const session = useRoom(setNotice),
+  const session = useRoom(setNotice, account),
     { room, state, busy, status, online, offset, presence, dispatch } = session;
   const demo = room?.id === "demo",
     disabled = !!room && !demo && (!online || busy);
@@ -208,6 +211,7 @@ function App() {
               <h2 id="join-heading">Make room for a moment.</h2>
               <p>Start something together, or join your people.</p>
             </div>
+            <AccountPanel />
             <label>
               Your name
               <input
@@ -251,7 +255,7 @@ function App() {
                 Join room →
               </button>
             </form>
-            {readSaved("room")?.code ? (
+            {!account.signedIn && readSaved("room")?.code ? (
               <button
                 className="link"
                 disabled={busy || (verificationRequired && !token)}
@@ -264,11 +268,30 @@ function App() {
               Explore the local demo
             </button>
             <RecentRooms
-              rooms={session.recentRooms}
-              rename={session.rename}
-              forget={session.forget}
+              rooms={account.signedIn ? account.rooms : session.recentRooms}
+              rename={
+                account.signedIn
+                  ? (id, name) =>
+                      account.mutate("name_room", {
+                        id,
+                        name: name.trim() || "My room",
+                      })
+                  : session.rename
+              }
+              forget={
+                account.signedIn
+                  ? (id) =>
+                      account.mutate("hide_room", {
+                        id,
+                        name:
+                          account.rooms.find((room) => room.id === id)?.name ||
+                          "My room",
+                      })
+                  : session.forget
+              }
               rejoin={open}
               disabled={busy || (verificationRequired && !token)}
+              synced={account.signedIn}
             />
             <small>
               {db
@@ -361,11 +384,18 @@ function App() {
                   key={room.id}
                   maxLength={40}
                   defaultValue={
-                    session.recentRooms.find((item) => item.id === room.id)
-                      ?.name || "My room"
+                    (account.signedIn
+                      ? account.rooms
+                      : session.recentRooms
+                    ).find((item) => item.id === room.id)?.name || "My room"
                   }
                   onBlur={(event) =>
-                    session.rename(room.id, event.target.value)
+                    account.signedIn
+                      ? account.mutate("name_room", {
+                          id: room.id,
+                          name: event.target.value.trim() || "My room",
+                        })
+                      : session.rename(room.id, event.target.value)
                   }
                 />
               </label>
@@ -629,6 +659,7 @@ function App() {
           </button>
         </div>
       ) : null}
+      {room && <AccountPanel />}
       <footer>
         <span>SYNCORA · BETTER TOGETHER</span>
         <button className="link" onClick={() => helpDialog.current.showModal()}>
@@ -641,6 +672,18 @@ function App() {
 }
 createRoot(document.getElementById("root")).render(
   <ErrorBoundary>
-    <App />
+    <AccountProvider>
+      <AccountApp />
+    </AccountProvider>
   </ErrorBoundary>,
 );
+function AccountApp() {
+  const account = useAccount();
+  return account.ready ? (
+    <App key={account.signedIn ? account.user.id : "guest"} />
+  ) : (
+    <main className="shell">
+      <p role="status">Connecting your account…</p>
+    </main>
+  );
+}

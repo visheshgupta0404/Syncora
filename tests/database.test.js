@@ -45,6 +45,7 @@ before(async () => {
   pg = new PGlite();
   await pg.exec(`create role anon;create role authenticated;create role service_role;create schema auth;
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;
  grant usage on schema auth to public;
  create schema realtime;create table realtime.messages(topic text,extension text);alter table realtime.messages enable row level security;
  grant usage on schema realtime to authenticated;grant select,insert on realtime.messages to authenticated;
@@ -660,4 +661,159 @@ test("one member can rejoin separate groups without mixing queues or messages", 
   assert.equal(first.state.queue.length, 1);
   assert.equal(first.state.messages[0].text, "Friends only");
   assert.equal(first.members.length, 1);
+});
+
+async function accountRequest(operation, payload = {}) {
+  const result = (
+    await pg.query("select public.account_library($1,$2::jsonb) as result", [
+      operation,
+      JSON.stringify(payload),
+    ])
+  ).rows[0].result;
+  if (result.error) throw Error(result.error);
+  return result.data;
+}
+async function guestFlag(value) {
+  await pg.query("select set_config('request.jwt.claims',$1,false)", [
+    JSON.stringify({ is_anonymous: value }),
+  ]);
+}
+test("account libraries are isolated, validated and cannot be read or changed by guests", async () => {
+  await identity(users[0]);
+  await guestFlag(false);
+  const playlist = {
+    id: "list-a",
+    name: "Our songs",
+    tracks: [{ id: "M7lc1UVf-VE", title: "Song" }],
+  };
+  assert.equal(
+    (await accountRequest("save_playlist", playlist)).playlists.length,
+    1,
+  );
+  await identity(users[1]);
+  await guestFlag(false);
+  assert.equal((await accountRequest("read")).playlists.length, 0);
+  assert.equal(
+    (await pg.query("select * from account_libraries")).rows.length,
+    1,
+  );
+  await assert.rejects(
+    pg.query("update account_libraries set playlists='[]'"),
+    /permission denied/,
+  );
+  await assert.rejects(
+    accountRequest("save_playlist", {
+      ...playlist,
+      tracks: [{ id: "bad", title: "X" }],
+    }),
+    /Invalid playlist video/,
+  );
+  await guestFlag(true);
+  await assert.rejects(accountRequest("read"), /Sign in/);
+  assert.equal(
+    (await pg.query("select * from account_libraries")).rows.length,
+    0,
+  );
+  await identity(users[0]);
+  await guestFlag(false);
+  assert.equal((await accountRequest("read")).playlists[0].name, "Our songs");
+  await accountRequest("delete_playlist", { id: "list-a" });
+  assert.equal((await accountRequest("read")).playlists.length, 0);
+});
+test("one-time guest transfer preserves hosting, rejects theft and prevents replay by another account", async () => {
+  await identity(users[0]);
+  await guestFlag(true);
+  let room = await open();
+  await action(room, "add", track(1));
+  const token = "ab".repeat(32);
+  await pg.query("select public.prepare_guest_transfer($1)", [token]);
+  await assert.rejects(
+    pg.query("select * from guest_account_transfers"),
+    /permission denied/,
+  );
+  await identity(users[1]);
+  await guestFlag(false);
+  await assert.rejects(
+    pg.query("select public.claim_guest_transfer($1)", ["cd".repeat(32)]),
+    /unavailable/,
+  );
+  await pg.query("select public.claim_guest_transfer($1)", [token]);
+  await pg.query("select public.claim_guest_transfer($1)", [token]);
+  room = (await pg.query("select * from rooms where id=$1", [room.id])).rows[0];
+  assert.equal(room.members[0], users[1]);
+  assert.equal(room.state.queue.length, 1);
+  await accountRequest("name_room", { id: room.id, name: "Friends" });
+  assert.equal(
+    (await accountRequest("read")).room_names[room.id].name,
+    "Friends",
+  );
+  await identity(users[2]);
+  await guestFlag(false);
+  await assert.rejects(
+    pg.query("select public.claim_guest_transfer($1)", [token]),
+    /unavailable/,
+  );
+  await assert.rejects(
+    accountRequest("name_room", { id: room.id, name: "Stolen" }),
+    /access denied/,
+  );
+  await identity(users[0]);
+  await guestFlag(true);
+  assert.equal((await pg.query("select * from rooms")).rows.length, 0);
+});
+
+test("cloud playlist limits reject oversized libraries without overwriting saved entries", async () => {
+  await identity(users[3]);
+  await guestFlag(false);
+  for (let i = 0; i < 20; i++)
+    await accountRequest("save_playlist", {
+      id: `cloud-${i}`,
+      name: `Mix ${i}`,
+      tracks: [{ id: "M7lc1UVf-VE", title: "A video" }],
+    });
+  await assert.rejects(
+    accountRequest("save_playlist", {
+      id: "overflow",
+      name: "Too much",
+      tracks: [{ id: "M7lc1UVf-VE", title: "A video" }],
+    }),
+    /20 playlists/,
+  );
+  assert.equal((await accountRequest("read")).playlists.length, 20);
+  await accountRequest("save_playlist", {
+    id: "cloud-0",
+    name: "Updated",
+    tracks: [{ id: "M7lc1UVf-VE", title: "Updated" }],
+  });
+  assert.equal(
+    (await accountRequest("read")).playlists.find(
+      (item) => item.id === "cloud-0",
+    ).name,
+    "Updated",
+  );
+});
+test("guest transfer collapses a duplicate membership and rejects expired tokens", async () => {
+  await identity(users[0]);
+  await guestFlag(true);
+  let room = await open();
+  const token = "ef".repeat(32);
+  await pg.query("select public.prepare_guest_transfer($1)", [token]);
+  await identity(users[1]);
+  await guestFlag(false);
+  await open(room.code);
+  await pg.query("select public.claim_guest_transfer($1)", [token]);
+  const transferred = (
+    await pg.query("select * from rooms where id=$1", [room.id])
+  ).rows[0];
+  assert.deepEqual(transferred.members, [users[1]]);
+  await pg.exec("reset role");
+  await pg.query(
+    "update guest_account_transfers set expires_at=now()-interval '1 second' where guest_id=$1",
+    [users[0]],
+  );
+  await identity(users[1]);
+  await assert.rejects(
+    pg.query("select public.claim_guest_transfer($1)", [token]),
+    /expired/,
+  );
 });

@@ -4,7 +4,7 @@ import { initialState, reduce } from "../lib/model";
 import { readSaved, save } from "../lib/storage";
 import { cleanRooms, rememberRoom } from "../lib/library";
 
-export function useRoom(notify) {
+export function useRoom(notify, account) {
   const [recentRooms, setRecentRooms] = useState(() =>
     cleanRooms(readSaved("recentRooms")),
   );
@@ -15,6 +15,16 @@ export function useRoom(notify) {
     setRecentRooms(next);
   }
   function remember(r) {
+    if (actor.current && !actor.current.is_anonymous) {
+      const saved = account?.library?.room_names?.[r.id];
+      if (saved?.hidden)
+        account.mutate("name_room", {
+          id: r.id,
+          name: saved.name || "My room",
+        });
+      account?.refresh();
+      return;
+    }
     storeRooms(rememberRoom(readSaved("recentRooms", []), r));
   }
   function forget(id) {
@@ -80,7 +90,7 @@ export function useRoom(notify) {
       history.replaceState(null, "", location.pathname);
       ref.current = null;
       accept(r, generation);
-      save("room", { id: r.id, code: r.code });
+      save("room", { id: r.id, code: r.code, ownerId: actor.current.id });
       remember(r);
       setStatus("Connecting…");
     } catch (e) {
@@ -300,6 +310,7 @@ export function useRoom(notify) {
       setBusy(true);
       try {
         await rpc("leave_room", { room_id: ref.current.id });
+        account?.refresh();
         forget(ref.current.id);
         reset();
       } catch (e) {
@@ -311,7 +322,11 @@ export function useRoom(notify) {
       if (ref.current && ref.current.id !== "demo") remember(ref.current);
       const saved =
         ref.current?.id !== "demo"
-          ? { id: ref.current?.id, code: ref.current?.code }
+          ? {
+              id: ref.current?.id,
+              code: ref.current?.code,
+              ownerId: actor.current?.id,
+            }
           : null;
       reset();
       if (saved?.id) save("room", saved);

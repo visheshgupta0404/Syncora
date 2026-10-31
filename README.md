@@ -28,8 +28,9 @@ Watch, listen and hang out together in a private room for **up to 6 people**.
 | **Stay together** — catch up with Resync | **Know what's next** — current video and up-next labels |
 | **GIFs and emojis** — search GIPHY or send built-in reactions | **Quick reactions** — share a feeling with the room |
 | **Sleep timer** — pause just your device | **Room themes** — Midnight, Cozy café or Cinema, saved on your device |
-| **Saved playlists** — keep and reuse queues on your device | **Recent rooms** — personal nicknames and rejoin shortcuts |
+| **Saved playlists** — keep and reuse queues on your device or account | **Recent rooms** — personal nicknames and rejoin shortcuts |
 | **Host controls** — optional host-only playback and queue edits | **Separate groups** — each room keeps its own chat and queue |
+| **Optional Google sign-in** — sync rooms and playlists across devices | **Guest recovery** — keep existing room seats and host ownership |
 
 ## Your room in three steps
 
@@ -38,6 +39,8 @@ Watch, listen and hang out together in a private room for **up to 6 people**.
 3. **Enjoy** — search for a video, add it to the queue and press play.
 
 **Install it:** Android → browser install option. iPhone → Safari → Share → Add to Home Screen.
+
+**Keep your library:** choose **Continue with Google**. Use **Import device library** to copy device playlists to your account. [Privacy](https://syncoramoments.pages.dev/privacy.html).
 
 ## For developers
 

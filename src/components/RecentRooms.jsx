@@ -4,12 +4,18 @@ export default function RecentRooms({
   forget,
   rejoin,
   disabled,
+  synced = false,
 }) {
   if (!rooms.length) return null;
   return (
     <section className="recent-rooms" aria-labelledby="recent-rooms-title">
       <h3 id="recent-rooms-title">Your rooms</h3>
-      <p>Private shortcuts on this device. Open one room at a time.</p>
+      <p>
+        {synced
+          ? "Your account’s rooms, available across devices."
+          : "Private shortcuts on this device."}{" "}
+        Open one room at a time.
+      </p>
       {rooms.map((room) => (
         <article key={room.id}>
           <label>
@@ -35,8 +41,11 @@ export default function RecentRooms({
         </article>
       ))}
       <small>
-        Nicknames are only visible to you. Clearing browser data removes these
-        shortcuts. Forgetting a shortcut does not release your seat.
+        Nicknames are only visible to you.{" "}
+        {synced
+          ? "Room shortcuts sync with your account."
+          : "Clearing browser data removes these shortcuts."}{" "}
+        Forgetting a shortcut does not release your seat.
       </small>
     </section>
   );

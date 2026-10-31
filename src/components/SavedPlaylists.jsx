@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { appendPlaylist, cleanPlaylists, cleanTracks } from "../lib/library";
 import { readSaved, save } from "../lib/storage";
+import { useAccount } from "./AccountProvider";
 
 export default function SavedPlaylists({ queue, dispatch, disabled, notify }) {
-  const [items, setItems] = useState(() =>
+  const account = useAccount();
+  const [localItems, setItems] = useState(() =>
     cleanPlaylists(readSaved("playlists")),
   );
+  const items = account.signedIn
+    ? cleanPlaylists(account.library.playlists)
+    : localItems;
   const [name, setName] = useState("");
   const [selected, setSelected] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,7 +22,28 @@ export default function SavedPlaylists({ queue, dispatch, disabled, notify }) {
       active.current = false;
     };
   }, []);
-  function persist(next) {
+  async function persist(next) {
+    if (account.signedIn) {
+      if (lock.current) return false;
+      lock.current = true;
+      setLoading(true);
+      try {
+        const added = next.find(
+          (item) => !items.some((existing) => existing.id === item.id),
+        );
+        const removed = items.find(
+          (item) => !next.some((existing) => existing.id === item.id),
+        );
+        return added
+          ? await account.mutate("save_playlist", added)
+          : removed
+            ? await account.mutate("delete_playlist", { id: removed.id })
+            : true;
+      } finally {
+        lock.current = false;
+        if (active.current) setLoading(false);
+      }
+    }
     if (!save("playlists", next)) {
       notify(
         "Device storage is unavailable. Your playlist could not be saved.",
@@ -60,15 +86,18 @@ export default function SavedPlaylists({ queue, dispatch, disabled, notify }) {
         Saved playlists <span>{items.length}</span>
       </summary>
       <p>
-        Saved on this device, even after a room expires. Loading adds missing
-        videos without replacing the queue.
+        {account.signedIn
+          ? "Saved to your account across devices"
+          : "Saved on this device"}
+        , even after a room expires. Loading adds missing videos without
+        replacing the queue.
       </p>
       <form
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
           if (!name.trim() || !queue.length || items.length >= 20) return;
           if (
-            persist([
+            await persist([
               ...items,
               {
                 id: crypto.randomUUID(),
@@ -78,7 +107,11 @@ export default function SavedPlaylists({ queue, dispatch, disabled, notify }) {
             ])
           ) {
             setName("");
-            notify("Playlist saved on this device.");
+            notify(
+              account.signedIn
+                ? "Playlist saved to your account."
+                : "Playlist saved on this device.",
+            );
           }
         }}
       >
@@ -119,12 +152,12 @@ export default function SavedPlaylists({ queue, dispatch, disabled, notify }) {
           </label>
           <div className="library-actions">
             <button disabled={!selected || disabled || loading} onClick={load}>
-              {loading ? "Adding videos…" : "Add to this room"}
+              {loading ? "Working…" : "Add to this room"}
             </button>
             <button
               disabled={!selected || loading}
-              onClick={() => {
-                if (persist(items.filter((item) => item.id !== selected)))
+              onClick={async () => {
+                if (await persist(items.filter((item) => item.id !== selected)))
                   setSelected("");
               }}
             >
@@ -134,7 +167,9 @@ export default function SavedPlaylists({ queue, dispatch, disabled, notify }) {
         </>
       )}
       <small>
-        No cross-device sync. Clearing browser data removes saved playlists.
+        {account.signedIn
+          ? "Synced with your account. Device-only playlists can be imported from your account panel."
+          : "No cross-device sync. Clearing browser data removes saved playlists."}
       </small>
     </details>
   );

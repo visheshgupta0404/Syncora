@@ -2688,3 +2688,9 @@ body:has(.shell[data-room-theme="cinema"]) { background: radial-gradient(ellipse
 .host-controls p { font-size: 12px; margin: 0 0 8px; }
 .host-controls small { margin-top: 7px; }
 @media (max-width: 700px) { .room-personal-settings { grid-template-columns: 1fr; gap: 12px; padding: 12px; } .recent-rooms input, .saved-playlists input, .room-personal-settings input, .host-controls select { font-size: 16px; } }
+.account-panel { padding: 16px; margin-block: 18px; border: 1px solid #ffffff25; border-radius: 14px; background: #151c2bd9; }
+.account-panel > strong { display: block; font-size: 14px; overflow-wrap: anywhere; }
+.account-panel > small { display: block; margin-top: 7px; font-size: 11px; color: #bac6df; }
+.account-panel p { font-size: 12px; line-height: 1.6; color: #c4cde0; }
+.account-panel [role="alert"] { color: #ffb8b8; }
+.account-panel .google-sign-in { width: 100%; background: #f6f7fa; color: #202633; border-color: #fff; font-weight: 600; margin-top: 10px; }

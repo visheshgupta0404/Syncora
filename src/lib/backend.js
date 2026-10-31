@@ -3,7 +3,9 @@ const url = import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const captchaSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || "";
 export const db =
-  url && key && !url.includes("YOUR_PROJECT") ? createClient(url, key) : null;
+  url && key && !url.includes("YOUR_PROJECT")
+    ? createClient(url, key, { auth: { flowType: "pkce" } })
+    : null;
 export async function rpc(name, args) {
   const secured = ["open_room", "room_action"].includes(name);
   const { data, error } = await db
